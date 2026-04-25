@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1a5fa8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="バスナビ">
+<title>上大岡バスナビ</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --mai:#c0392b;--mai-light:#fde8e8;
+  --r30:#1a5fa8;--r30-light:#e0eaf8;
+  --r31:#1a7a4a;--r31-light:#e0f2e9;
+  --orange:#d4700a;--orange-light:#fef0e0;
+  --gray:#5a5a5a;--gray-light:#f0efeb;
+  --bg:#f8f7f5;--card:#ffffff;--text:#1a1a1a;--muted:#888;
+  --border:#e0ddd8;--radius:12px;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif;background:var(--bg);color:var(--text);min-height:100dvh}
+.app{max-width:480px;margin:0 auto;padding:calc(var(--safe-top) + 1rem) 1rem calc(var(--safe-bot) + 2rem)}
+
+.hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.25rem}
+.station-label{font-size:11px;color:var(--muted);letter-spacing:.06em;margin-bottom:3px}
+.sta-name{font-size:22px;font-weight:700;color:var(--text);line-height:1}
+.sta-sub{font-size:13px;color:var(--r30);font-weight:600;margin-top:3px}
+.hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.clock{font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--text);letter-spacing:-.02em}
+.day-pill{font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;letter-spacing:.04em}
+.pill-weekday{background:var(--r30-light);color:var(--r30)}
+.pill-saturday{background:var(--r31-light);color:var(--r31)}
+.pill-holiday{background:var(--orange-light);color:var(--orange)}
+
+.bus-list{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;margin-bottom:1rem;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.bus-row{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);position:relative}
+.bus-row:last-child{border-bottom:none}
+.bus-row.is-top{background:#f8faff}
+.bus-row.is-past{background:#f6f6f6;opacity:.55}
+.top-bar{position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:2px 0 0 2px}
+
+.time-col{min-width:54px}
+.time{font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1;color:var(--text)}
+.is-past .time{color:var(--muted)}
+.cntdwn{font-size:11px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums}
+.cntdwn.soon{color:var(--mai);font-weight:600}
+.cntdwn.gone{color:#bbb}
+
+.route-badge{font-size:12px;font-weight:700;padding:3px 9px;border-radius:5px;white-space:nowrap;min-width:46px;text-align:center}
+.bm{background:var(--mai-light);color:var(--mai)}
+.b30{background:var(--r30-light);color:var(--r30)}
+.b31{background:var(--r31-light);color:var(--r31)}
+
+.dest-col{flex:1;min-width:0}
+.dest{font-size:16px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.is-past .dest{color:var(--muted)}
+.via{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.note-tag{display:inline-block;font-size:10px;font-weight:600;padding:1px 6px;border-radius:3px;background:var(--orange-light);color:var(--orange);margin-top:3px}
+
+.msg{padding:2.5rem;text-align:center;color:var(--muted);font-size:14px;line-height:1.7}
+
+.day-wrap{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:1rem}
+.day-btn{padding:11px 8px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);cursor:pointer;font-family:inherit;font-size:14px;color:var(--muted);text-align:center;transition:all .15s}
+.day-btn:active{transform:scale(.97)}
+.day-btn.aw{border-color:var(--r30);background:var(--r30-light);color:var(--r30);font-weight:600}
+.day-btn.as{border-color:var(--r31);background:var(--r31-light);color:var(--r31);font-weight:600}
+.day-btn.ah{border-color:var(--orange);background:var(--orange-light);color:var(--orange);font-weight:600}
+
+.footer{margin-top:.5rem;text-align:center;font-size:10px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hdr">
+    <div>
+      <div class="station-label">上大岡駅 8番のりば発</div>
+      <div class="sta-name">上大岡</div>
+      <div class="sta-sub">神奈川中央交通</div>
+    </div>
+    <div class="hdr-right">
+      <div class="clock" id="clock">--:--</div>
+      <div class="day-pill pill-weekday" id="day-pill">平日</div>
+    </div>
+  </div>
+
+  <div class="bus-list" id="bus-list"><div class="msg">読み込み中...</div></div>
+
+  <div class="day-wrap">
+    <button class="day-btn" id="btn-weekday"  onclick="setDay('weekday')">平日</button>
+    <button class="day-btn" id="btn-saturday" onclick="setDay('saturday')">土曜</button>
+    <button class="day-btn" id="btn-holiday"  onclick="setDay('holiday')">日祝</button>
+  </div>
+
+  <div class="footer">データ：神奈川中央交通 2025/8/30改正</div>
+</div>
+
+<script>
+// ── 時刻表データ (上大岡駅 8番のりば発、時刻順) ──
+// route: 'mai'=舞01, 'r30'=上30, 'r31'=上31
+const TT = {
+weekday:[
+  {h:6,m:11,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:6,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:6,m:36,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:7,m:1, r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:7,m:5, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:7,m:18,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:7,m:24,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:7,m:35,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:7,m:35,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:7,m:40,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:7,m:58,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:8,m:2, r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:8,m:21,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:8,m:25,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:8,m:30,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:8,m:37,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:8,m:41,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:8,m:52,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:8,m:54,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:9,m:20,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:9,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:9,m:46,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:9,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:10,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:10,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:10,m:35,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:10,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:11,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:11,m:24,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:11,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:11,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:11,m:55,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:12,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:12,m:20,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},
+  {h:12,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:12,m:45,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:12,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:13,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:13,m:11,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:13,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:13,m:35,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},
+  {h:13,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:14,m:0, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:14,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:14,m:24,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:14,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:14,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:15,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:15,m:15,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:15,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:15,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:16,m:5, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:16,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:16,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:16,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:16,m:55,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:17,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:17,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:17,m:45,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:17,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:18,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:18,m:11,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:18,m:26,r:'r30',dest:'芹が谷',via:'上永谷駅経由',note:'芹が谷止'},
+  {h:18,m:35,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:18,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:19,m:0, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:19,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:19,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:19,m:34,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},
+  {h:20,m:6, r:'r30',dest:'芹が谷',via:'上永谷駅経由',note:'芹が谷止'},
+  {h:20,m:8, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:20,m:46,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:20,m:59,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:21,m:26,r:'r30',dest:'芹が谷',via:'上永谷駅経由',note:'芹が谷止'},
+  {h:21,m:55,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},
+  {h:22,m:6, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+],
+saturday:[
+  {h:6,m:30,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:6,m:46,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:7,m:6, r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:7,m:8, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:7,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:7,m:46,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:7,m:53,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:8,m:6, r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:8,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:8,m:38,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:8,m:50,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:9,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:9,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:9,m:28,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},
+  {h:9,m:50,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:10,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:10,m:18,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:10,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:10,m:46,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:10,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:11,m:7, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:11,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:11,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:11,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:11,m:58,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:12,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:12,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:12,m:48,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:12,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:13,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:13,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:13,m:38,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:13,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:14,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:14,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:14,m:28,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:14,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:15,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:15,m:18,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:15,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:15,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:16,m:7, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:16,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:16,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:16,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:16,m:58,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:17,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:17,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:17,m:48,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:17,m:53,r:'r30',dest:'芹が谷',via:'上永谷駅経由',note:'芹が谷止'},
+  {h:18,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:18,m:26,r:'r30',dest:'芹が谷',via:'上永谷駅経由',note:'芹が谷止'},
+  {h:18,m:38,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},
+  {h:18,m:56,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:19,m:0, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:19,m:9, r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:19,m:28,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:19,m:53,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},
+  {h:20,m:9, r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:20,m:18,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:21,m:7, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},
+  {h:21,m:9, r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:22,m:7, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+],
+holiday:[
+  {h:6,m:16,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:6,m:40,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:7,m:8, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:7,m:10,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:7,m:53,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:8,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:8,m:38,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:8,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:9,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:9,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:9,m:28,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},
+  {h:9,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:10,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:10,m:18,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:10,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:10,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:11,m:7, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:11,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:11,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:11,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:11,m:58,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:12,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:12,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:12,m:48,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:12,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:13,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:13,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:13,m:38,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:13,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:14,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:14,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:14,m:28,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:14,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:15,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:15,m:18,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:15,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:15,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:16,m:7, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:16,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:16,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:16,m:56,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:16,m:58,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:17,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:17,m:48,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:17,m:56,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:18,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:18,m:38,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:18,m:55,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:19,m:26,r:'r30',dest:'芹が谷',via:'上永谷駅経由',note:'芹が谷止'},
+  {h:19,m:34,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},
+  {h:20,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:21,m:26,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+],
+};
+
+// ── 定数 ──
+const LABEL = {mai:'舞01', r30:'上30', r31:'上31'};
+const BCLS  = {mai:'bm',  r30:'b30',  r31:'b31'};
+const COLOR  = {mai:'var(--mai)', r30:'var(--r30)', r31:'var(--r31)'};
+
+let currentDay = 'weekday';
+
+function pad(n){ return String(n).padStart(2,'0'); }
+function nowMin(){ const d=new Date(); return d.getHours()*60+d.getMinutes(); }
+
+function sorted(day){
+  return [...TT[day]].sort((a,b)=>a.h*60+a.m-(b.h*60+b.m));
+}
+
+function detectDay(){
+  const d=new Date(), dow=d.getDay();
+  const holidays=['2025-01-01','2025-01-13','2025-02-11','2025-02-23','2025-02-24','2025-03-20',
+    '2025-04-29','2025-05-03','2025-05-04','2025-05-05','2025-05-06','2025-07-21','2025-08-11',
+    '2025-09-15','2025-09-22','2025-09-23','2025-10-13','2025-11-03','2025-11-23','2025-11-24',
+    '2026-01-01','2026-01-12','2026-02-11','2026-02-23','2026-03-20','2026-04-29','2026-05-03',
+    '2026-05-04','2026-05-05','2026-05-06','2026-07-20','2026-08-11','2026-09-21','2026-09-22',
+    '2026-09-23','2026-10-12','2026-11-03','2026-11-23'];
+  const ds=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  if(holidays.includes(ds)||dow===0) return 'holiday';
+  if(dow===6) return 'saturday';
+  return 'weekday';
+}
+
+function render(){
+  const now=nowMin();
+  const buses=sorted(currentDay);
+  const ni=buses.findIndex(b=>b.h*60+b.m>=now);
+
+  // 表示リスト: 直前1本(グレー) + 次の3本
+  const show=[];
+  if(ni===-1){
+    // 全便終了
+    if(buses.length) show.push({...buses[buses.length-1],past:true});
+  } else {
+    if(ni>0) show.push({...buses[ni-1],past:true});
+    for(let i=0;i<3&&ni+i<buses.length;i++) show.push({...buses[ni+i],past:false});
+  }
+
+  if(!show.length){
+    document.getElementById('bus-list').innerHTML='<div class="msg">本日の運行はありません</div>';
+    return;
+  }
+
+  let html='';
+  const firstFutureIdx = show.findIndex(b=>!b.past);
+
+  show.forEach((b,i)=>{
+    const ts=`${pad(b.h)}:${pad(b.m)}`;
+    const diff=b.h*60+b.m-now;
+    const isTop=!b.past&&i===firstFutureIdx;
+
+    // カウントダウン
+    let cntHtml='';
+    if(b.past){
+      cntHtml=`<div class="cntdwn gone">発車済み</div>`;
+    } else if(diff===0){
+      cntHtml=`<div class="cntdwn soon">まもなく発車</div>`;
+    } else if(diff<=5){
+      cntHtml=`<div class="cntdwn soon">あと ${diff} 分</div>`;
+    } else {
+      cntHtml=`<div class="cntdwn">あと ${diff} 分</div>`;
+    }
+
+    const noteHtml=b.note?`<span class="note-tag">${b.note}</span>`:'';
+    const barColor=b.past?'#ccc':COLOR[b.r];
+    const rowCls=b.past?'bus-row is-past':(isTop?'bus-row is-top':'bus-row');
+
+    html+=`<div class="${rowCls}">
+  <div class="top-bar" style="background:${barColor}"></div>
+  <div class="time-col">
+    <div class="time">${ts}</div>
+    ${cntHtml}
+  </div>
+  <span class="route-badge ${BCLS[b.r]}">${LABEL[b.r]}</span>
+  <div class="dest-col">
+    <div class="dest">${b.dest}</div>
+    <div class="via">${b.via}</div>
+    ${noteHtml}
+  </div>
+</div>`;
+  });
+
+  document.getElementById('bus-list').innerHTML=html;
+}
+
+function setDay(day){
+  currentDay=day;
+  const activeCls={weekday:'aw',saturday:'as',holiday:'ah'};
+  ['weekday','saturday','holiday'].forEach(d=>{
+    const btn=document.getElementById('btn-'+d);
+    btn.className='day-btn'+(d===day?' '+activeCls[d]:'');
+  });
+  const pillCls={weekday:'day-pill pill-weekday',saturday:'day-pill pill-saturday',holiday:'day-pill pill-holiday'};
+  const pillTxt={weekday:'平日',saturday:'土曜',holiday:'日祝'};
+  const pill=document.getElementById('day-pill');
+  pill.className=pillCls[day];
+  pill.textContent=pillTxt[day];
+  render();
+}
+
+function updateClock(){
+  const d=new Date();
+  document.getElementById('clock').textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function init(){
+  updateClock();
+  setDay(detectDay());
+  const tick=()=>{
+    updateClock();
+    render();
+    setTimeout(tick,60000-Date.now()%60000);
+  };
+  setTimeout(tick,60000-Date.now()%60000);
+}
+
+init();
+</script>
+</body>
+</html>
