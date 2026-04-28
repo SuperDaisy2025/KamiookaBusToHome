@@ -3,53 +3,96 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#1a5fa8">
+<meta name="theme-color" content="#cc2233">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="バスナビ">
-<title>上大岡バスナビ</title>
+<meta name="apple-mobile-web-app-title" content="通勤ナビ">
+<title>通勤ナビ</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
+  --red:#cc2233;--red-light:#f5e0e2;
+  --orange:#d4700a;--orange-light:#fef0e0;
+  --blue:#1a5fa8;--blue-light:#e0eaf8;
+  --purple:#5c3fa0;--purple-light:#ede8f8;
+  --gray:#5a5a5a;--gray-light:#f0efeb;
+  --green:#1a7a4a;--green-light:#e0f2e9;
   --mai:#c0392b;--mai-light:#fde8e8;
   --r30:#1a5fa8;--r30-light:#e0eaf8;
   --r31:#1a7a4a;--r31-light:#e0f2e9;
-  --orange:#d4700a;--orange-light:#fef0e0;
-  --gray:#5a5a5a;--gray-light:#f0efeb;
   --bg:#f8f7f5;--card:#ffffff;--text:#1a1a1a;--muted:#888;
   --border:#e0ddd8;--radius:12px;
   --safe-top:env(safe-area-inset-top,0px);
   --safe-bot:env(safe-area-inset-bottom,0px);
+  --tab-h:56px;
 }
 body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif;background:var(--bg);color:var(--text);min-height:100dvh}
-.app{max-width:480px;margin:0 auto;padding:calc(var(--safe-top) + 1rem) 1rem calc(var(--safe-bot) + 2rem)}
 
+/* ── タブバー ── */
+.tab-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  height:calc(var(--tab-h) + var(--safe-bot));
+  background:var(--card);
+  border-top:1px solid var(--border);
+  display:flex;
+  z-index:200;
+  padding-bottom:var(--safe-bot);
+}
+.tab-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;cursor:pointer;border:none;background:none;font-family:inherit;
+  padding:0;color:var(--muted);transition:color .15s;
+}
+.tab-btn.active-train{color:var(--red)}
+.tab-btn.active-bus-go{color:var(--r30)}
+.tab-btn.active-bus-back{color:var(--r31)}
+.tab-icon{font-size:20px;line-height:1}
+.tab-label{font-size:10px;font-weight:600;letter-spacing:.03em}
+
+/* ── ページ ── */
+.page{display:none;padding:calc(var(--safe-top) + 1rem) 1rem calc(var(--tab-h) + var(--safe-bot) + 1rem)}
+.page.active{display:block}
+.inner{max-width:480px;margin:0 auto}
+
+/* ── 共通ヘッダー ── */
 .hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.25rem}
 .station-label{font-size:11px;color:var(--muted);letter-spacing:.06em;margin-bottom:3px}
-.sta-name{font-size:22px;font-weight:700;color:var(--text);line-height:1}
-.sta-sub{font-size:13px;color:var(--r30);font-weight:600;margin-top:3px}
+.route-row{display:flex;align-items:center;gap:6px}
+.sta-main{font-size:22px;font-weight:700;line-height:1}
+.sta-arrow{color:var(--muted);font-size:16px}
+.sta-sub{font-size:13px;font-weight:600;margin-top:3px}
 .hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
-.clock{font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--text);letter-spacing:-.02em}
+.clock{font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .day-pill{font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;letter-spacing:.04em}
-.pill-weekday{background:var(--r30-light);color:var(--r30)}
+.pill-weekday{background:var(--blue-light);color:var(--blue)}
+.pill-weekend{background:var(--green-light);color:var(--green)}
 .pill-saturday{background:var(--r31-light);color:var(--r31)}
 .pill-holiday{background:var(--orange-light);color:var(--orange)}
 
-.bus-list{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;margin-bottom:1rem;box-shadow:0 1px 4px rgba(0,0,0,.06)}
-.bus-row{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);position:relative}
-.bus-row:last-child{border-bottom:none}
-.bus-row.is-top{background:#f8faff}
-.bus-row.is-past{background:#f6f6f6;opacity:.55}
+/* ── リスト共通 ── */
+.item-list{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;margin-bottom:1rem;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.item-row{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);position:relative}
+.item-row:last-child{border-bottom:none}
+.item-row.is-top{background:#fffcfc}
+.item-row.is-top-bus{background:#f8faff}
+.item-row.is-past{background:#f6f6f6;opacity:.55}
 .top-bar{position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:2px 0 0 2px}
-
 .time-col{min-width:54px}
-.time{font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1;color:var(--text)}
-.is-past .time{color:var(--muted)}
+.time-big{font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1}
+.is-past .time-big{color:var(--muted)}
 .cntdwn{font-size:11px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums}
-.cntdwn.soon{color:var(--mai);font-weight:600}
+.cntdwn.soon{color:var(--red);font-weight:600}
+.cntdwn.soon-bus{color:var(--mai);font-weight:600}
 .cntdwn.gone{color:#bbb}
-
-.route-badge{font-size:12px;font-weight:700;padding:3px 9px;border-radius:5px;white-space:nowrap;min-width:46px;text-align:center}
+.badge{font-size:12px;font-weight:600;padding:3px 9px;border-radius:5px;white-space:nowrap;min-width:52px;text-align:center}
+/* 電車バッジ */
+.b-快特{background:var(--red-light);color:var(--red)}
+.b-エアポート快特{background:var(--orange-light);color:var(--orange)}
+.b-特急{background:var(--orange-light);color:var(--orange)}
+.b-急行{background:var(--blue-light);color:var(--blue)}
+.b-ウィング{background:var(--purple-light);color:var(--purple)}
+.b-普通{background:var(--gray-light);color:var(--gray)}
+/* バスバッジ */
 .bm{background:var(--mai-light);color:var(--mai)}
 .b30{background:var(--r30-light);color:var(--r30)}
 .b31{background:var(--r31-light);color:var(--r31)}
@@ -58,10 +101,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku
 .dest{font-size:16px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .is-past .dest{color:var(--muted)}
 .via{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.first-badge{font-size:12px;font-weight:600;padding:3px 9px;border-radius:5px;background:var(--green-light);color:var(--green);white-space:nowrap;flex-shrink:0}
 .note-tag{display:inline-block;font-size:10px;font-weight:600;padding:1px 6px;border-radius:3px;background:var(--orange-light);color:var(--orange);margin-top:3px}
-
 .msg{padding:2.5rem;text-align:center;color:var(--muted);font-size:14px;line-height:1.7}
 
+/* ── 電車 方向ボタン ── */
+.dir-wrap{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem}
+.dir-btn{padding:11px 8px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);cursor:pointer;font-family:inherit;font-size:14px;color:var(--muted);line-height:1.3;text-align:center;transition:all .15s}
+.dir-btn:active{transform:scale(.97)}
+.dir-btn.active{border-color:var(--red);background:var(--red-light);color:var(--red);font-weight:600}
+.dir-btn-sub{font-size:11px;margin-top:2px;opacity:.75}
+
+/* ── バス 曜日ボタン ── */
 .day-wrap{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:1rem}
 .day-btn{padding:11px 8px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);cursor:pointer;font-family:inherit;font-size:14px;color:var(--muted);text-align:center;transition:all .15s}
 .day-btn:active{transform:scale(.97)}
@@ -69,359 +120,429 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku
 .day-btn.as{border-color:var(--r31);background:var(--r31-light);color:var(--r31);font-weight:600}
 .day-btn.ah{border-color:var(--orange);background:var(--orange-light);color:var(--orange);font-weight:600}
 
-.footer{margin-top:.5rem;text-align:center;font-size:10px;color:var(--muted)}
+.footer{margin-top:.25rem;text-align:center;font-size:10px;color:var(--muted)}
 </style>
 </head>
 <body>
-<div class="app">
+
+<!-- ═══ 電車ページ ═══ -->
+<div class="page active" id="page-train">
+<div class="inner">
+  <div class="hdr">
+    <div>
+      <div class="station-label">京急線 次発案内</div>
+      <div class="route-row">
+        <span class="sta-main" id="t-from" style="color:var(--text)">品川</span>
+        <span class="sta-arrow">→</span>
+        <span class="sta-main" id="t-to" style="color:var(--red)">上大岡方面</span>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <div class="clock" id="t-clock">--:--</div>
+      <div class="day-pill pill-weekday" id="t-pill">平日</div>
+    </div>
+  </div>
+  <div class="item-list" id="train-list"><div class="msg">読み込み中...</div></div>
+  <div class="dir-wrap">
+    <button class="dir-btn active" id="btn-down" onclick="setDir('down')">← 下り<div class="dir-btn-sub">品川 → 上大岡方面</div></button>
+    <button class="dir-btn" id="btn-up" onclick="setDir('up')">上り →<div class="dir-btn-sub">上大岡 → 品川</div></button>
+  </div>
+  <div class="footer">データ：京急電鉄 2026年版</div>
+</div>
+</div>
+
+<!-- ═══ バス往きページ ═══ -->
+<div class="page" id="page-bus-go">
+<div class="inner">
   <div class="hdr">
     <div>
       <div class="station-label">上大岡駅 8番のりば発</div>
-      <div class="sta-name">上大岡</div>
-      <div class="sta-sub">神奈川中央交通</div>
+      <div class="route-row">
+        <span class="sta-main" style="color:var(--text)">上大岡</span>
+        <span class="sta-arrow">→</span>
+        <span class="sta-main" style="color:var(--r30)">各方面</span>
+      </div>
+      <div class="sta-sub" style="color:var(--muted);font-weight:500;font-size:13px;margin-top:3px">神奈川中央交通</div>
     </div>
     <div class="hdr-right">
-      <div class="clock" id="clock">--:--</div>
-      <div class="day-pill pill-weekday" id="day-pill">平日</div>
+      <div class="clock" id="g-clock">--:--</div>
+      <div class="day-pill pill-weekday" id="g-pill">平日</div>
     </div>
   </div>
-
-  <div class="bus-list" id="bus-list"><div class="msg">読み込み中...</div></div>
-
+  <div class="item-list" id="bus-go-list"><div class="msg">読み込み中...</div></div>
   <div class="day-wrap">
-    <button class="day-btn" id="btn-weekday"  onclick="setDay('weekday')">平日</button>
-    <button class="day-btn" id="btn-saturday" onclick="setDay('saturday')">土曜</button>
-    <button class="day-btn" id="btn-holiday"  onclick="setDay('holiday')">日祝</button>
+    <button class="day-btn" id="g-btn-weekday"  onclick="setBusGoDay('weekday')">平日</button>
+    <button class="day-btn" id="g-btn-saturday" onclick="setBusGoDay('saturday')">土曜</button>
+    <button class="day-btn" id="g-btn-holiday"  onclick="setBusGoDay('holiday')">日祝</button>
   </div>
-
   <div class="footer">データ：神奈川中央交通 2025/8/30改正</div>
 </div>
+</div>
+
+<!-- ═══ バス帰りページ ═══ -->
+<div class="page" id="page-bus-back">
+<div class="inner">
+  <div class="hdr">
+    <div>
+      <div class="station-label">下車ケ谷 発 → 上大岡駅 行き</div>
+      <div class="route-row">
+        <span class="sta-main" style="color:var(--text)">下車ケ谷</span>
+        <span class="sta-arrow">→</span>
+        <span class="sta-main" style="color:var(--r31)">上大岡駅</span>
+      </div>
+      <div class="sta-sub" style="color:var(--muted);font-weight:500;font-size:13px;margin-top:3px">神奈川中央交通</div>
+    </div>
+    <div class="hdr-right">
+      <div class="clock" id="b-clock">--:--</div>
+      <div class="day-pill pill-weekday" id="b-pill">平日</div>
+    </div>
+  </div>
+  <div class="item-list" id="bus-back-list"><div class="msg">読み込み中...</div></div>
+  <div class="day-wrap">
+    <button class="day-btn" id="b-btn-weekday"  onclick="setBusBackDay('weekday')">平日</button>
+    <button class="day-btn" id="b-btn-saturday" onclick="setBusBackDay('saturday')">土曜</button>
+    <button class="day-btn" id="b-btn-holiday"  onclick="setBusBackDay('holiday')">日祝</button>
+  </div>
+  <div class="footer">データ：神奈川中央交通 2025/8/30改正</div>
+</div>
+</div>
+
+<!-- ═══ タブバー ═══ -->
+<nav class="tab-bar">
+  <button class="tab-btn active-train" id="tab-train" onclick="showTab('train')">
+    <span class="tab-icon">🚃</span>
+    <span class="tab-label">京急電車</span>
+  </button>
+  <button class="tab-btn" id="tab-bus-go" onclick="showTab('bus-go')">
+    <span class="tab-icon">🚌</span>
+    <span class="tab-label">バス往き</span>
+  </button>
+  <button class="tab-btn" id="tab-bus-back" onclick="showTab('bus-back')">
+    <span class="tab-icon">🏠</span>
+    <span class="tab-label">バス帰り</span>
+  </button>
+</nav>
 
 <script>
-// ── 時刻表データ (上大岡駅 8番のりば発、時刻順) ──
-// route: 'mai'=舞01, 'r30'=上30, 'r31'=上31
-const TT = {
+// ═══════════════════════════════════════════════
+// 電車データ
+// ═══════════════════════════════════════════════
+const TT_DOWN={"土日祝":[{"h":5,"m":2,"type":"普通","dest":"神奈川新町","first":true},{"h":5,"m":10,"type":"特急","dest":"羽田空港","first":false},{"h":5,"m":18,"type":"普通","dest":"逗子・葉山","first":true},{"h":5,"m":28,"type":"快特","dest":"羽田空港","first":false},{"h":5,"m":34,"type":"普通","dest":"京急久里浜","first":true},{"h":5,"m":41,"type":"急行","dest":"羽田空港","first":false},{"h":5,"m":44,"type":"特急","dest":"三崎口","first":false},{"h":5,"m":51,"type":"快特","dest":"羽田空港","first":false},{"h":5,"m":54,"type":"普通","dest":"逗子・葉山","first":true},{"h":6,"m":1,"type":"特急","dest":"三崎口","first":false},{"h":6,"m":5,"type":"普通","dest":"逗子・葉山","first":true},{"h":6,"m":10,"type":"急行","dest":"羽田空港","first":false},{"h":6,"m":13,"type":"普通","dest":"浦賀","first":true},{"h":6,"m":18,"type":"快特","dest":"羽田空港","first":false},{"h":6,"m":21,"type":"快特","dest":"三崎口","first":false},{"h":6,"m":24,"type":"普通","dest":"逗子・葉山","first":true},{"h":6,"m":28,"type":"急行","dest":"羽田空港","first":false},{"h":6,"m":32,"type":"快特","dest":"三崎口","first":false},{"h":6,"m":35,"type":"普通","dest":"浦賀","first":true},{"h":6,"m":38,"type":"急行","dest":"羽田空港","first":false},{"h":6,"m":41,"type":"特急","dest":"三崎口","first":false},{"h":6,"m":46,"type":"普通","dest":"逗子・葉山","first":true},{"h":6,"m":49,"type":"急行","dest":"羽田空港","first":false},{"h":6,"m":53,"type":"快特","dest":"京急久里浜","first":false},{"h":6,"m":55,"type":"普通","dest":"浦賀","first":true},{"h":6,"m":58,"type":"特急","dest":"三崎口","first":false},{"h":7,"m":0,"type":"快特","dest":"京急久里浜","first":true},{"h":7,"m":3,"type":"急行","dest":"羽田空港","first":false},{"h":7,"m":5,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":7,"m":8,"type":"普通","dest":"浦賀","first":true},{"h":7,"m":10,"type":"特急","dest":"三崎口","first":false},{"h":7,"m":15,"type":"普通","dest":"逗子・葉山","first":true},{"h":7,"m":17,"type":"快特","dest":"羽田空港","first":false},{"h":7,"m":20,"type":"快特","dest":"三崎口","first":false},{"h":7,"m":23,"type":"普通","dest":"浦賀","first":true},{"h":7,"m":25,"type":"急行","dest":"羽田空港","first":false},{"h":7,"m":30,"type":"快特","dest":"京急久里浜","first":false},{"h":7,"m":32,"type":"普通","dest":"逗子・葉山","first":true},{"h":7,"m":34,"type":"急行","dest":"羽田空港","first":false},{"h":7,"m":37,"type":"特急","dest":"三崎口","first":false},{"h":7,"m":40,"type":"普通","dest":"浦賀","first":true},{"h":7,"m":43,"type":"急行","dest":"羽田空港","first":false},{"h":7,"m":46,"type":"快特","dest":"京急久里浜","first":false},{"h":7,"m":48,"type":"普通","dest":"逗子・葉山","first":true},{"h":7,"m":51,"type":"特急","dest":"三崎口","first":false},{"h":7,"m":53,"type":"普通","dest":"金沢文庫","first":true},{"h":7,"m":56,"type":"急行","dest":"羽田空港","first":false},{"h":7,"m":58,"type":"快特","dest":"三崎口","first":false},{"h":8,"m":1,"type":"普通","dest":"浦賀","first":true},{"h":8,"m":4,"type":"快特","dest":"羽田空港","first":false},{"h":8,"m":9,"type":"特急","dest":"三崎口","first":false},{"h":8,"m":11,"type":"普通","dest":"逗子・葉山","first":true},{"h":8,"m":13,"type":"快特","dest":"京急久里浜","first":false},{"h":8,"m":16,"type":"急行","dest":"羽田空港","first":false},{"h":8,"m":18,"type":"普通","dest":"浦賀","first":true},{"h":8,"m":23,"type":"快特","dest":"三崎口","first":false},{"h":8,"m":25,"type":"普通","dest":"逗子・葉山","first":true},{"h":8,"m":28,"type":"急行","dest":"羽田空港","first":false},{"h":8,"m":32,"type":"快特","dest":"京急久里浜","first":false},{"h":8,"m":35,"type":"普通","dest":"浦賀","first":true},{"h":8,"m":38,"type":"急行","dest":"羽田空港","first":false},{"h":8,"m":44,"type":"特急","dest":"三崎口","first":false},{"h":8,"m":46,"type":"普通","dest":"逗子・葉山","first":true},{"h":8,"m":49,"type":"急行","dest":"羽田空港","first":false},{"h":8,"m":53,"type":"快特","dest":"京急久里浜","first":false},{"h":8,"m":55,"type":"普通","dest":"浦賀","first":true},{"h":8,"m":58,"type":"特急","dest":"三崎口","first":false},{"h":9,"m":0,"type":"普通","dest":"浦賀","first":true},{"h":9,"m":3,"type":"急行","dest":"羽田空港","first":false},{"h":10,"m":0,"type":"快特","dest":"京急久里浜","first":false},{"h":10,"m":5,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":10,"m":6,"type":"普通","dest":"浦賀","first":true},{"h":10,"m":10,"type":"特急","dest":"三崎口","first":false},{"h":10,"m":14,"type":"特急","dest":"羽田空港","first":false},{"h":10,"m":16,"type":"普通","dest":"浦賀","first":true},{"h":10,"m":20,"type":"快特","dest":"京急久里浜","first":false},{"h":10,"m":25,"type":"快特","dest":"羽田空港","first":false},{"h":10,"m":26,"type":"普通","dest":"浦賀","first":true},{"h":10,"m":30,"type":"特急","dest":"三崎口","first":false},{"h":10,"m":34,"type":"特急","dest":"羽田空港","first":false},{"h":10,"m":36,"type":"普通","dest":"浦賀","first":true},{"h":10,"m":40,"type":"快特","dest":"京急久里浜","first":false},{"h":10,"m":45,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":10,"m":46,"type":"普通","dest":"浦賀","first":true},{"h":10,"m":50,"type":"特急","dest":"三崎口","first":false},{"h":10,"m":54,"type":"特急","dest":"羽田空港","first":false},{"h":10,"m":56,"type":"普通","dest":"浦賀","first":true},{"h":11,"m":0,"type":"快特","dest":"京急久里浜","first":false},{"h":11,"m":5,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":11,"m":6,"type":"普通","dest":"浦賀","first":true},{"h":11,"m":10,"type":"特急","dest":"三崎口","first":false},{"h":11,"m":14,"type":"特急","dest":"羽田空港","first":false},{"h":11,"m":16,"type":"普通","dest":"浦賀","first":true},{"h":11,"m":20,"type":"快特","dest":"京急久里浜","first":false},{"h":11,"m":25,"type":"快特","dest":"羽田空港","first":false},{"h":11,"m":26,"type":"普通","dest":"浦賀","first":true},{"h":11,"m":30,"type":"特急","dest":"三崎口","first":false},{"h":11,"m":34,"type":"特急","dest":"羽田空港","first":false},{"h":11,"m":36,"type":"普通","dest":"浦賀","first":true},{"h":11,"m":40,"type":"快特","dest":"京急久里浜","first":false},{"h":11,"m":45,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":11,"m":46,"type":"普通","dest":"浦賀","first":true},{"h":11,"m":50,"type":"特急","dest":"三崎口","first":false},{"h":11,"m":54,"type":"特急","dest":"羽田空港","first":false},{"h":11,"m":56,"type":"普通","dest":"浦賀","first":true},{"h":12,"m":0,"type":"快特","dest":"京急久里浜","first":false},{"h":12,"m":5,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":12,"m":6,"type":"普通","dest":"浦賀","first":true},{"h":12,"m":10,"type":"特急","dest":"三崎口","first":false},{"h":12,"m":14,"type":"特急","dest":"羽田空港","first":false},{"h":12,"m":16,"type":"普通","dest":"浦賀","first":true},{"h":12,"m":20,"type":"快特","dest":"京急久里浜","first":false},{"h":12,"m":25,"type":"快特","dest":"羽田空港","first":false},{"h":12,"m":26,"type":"普通","dest":"浦賀","first":true},{"h":12,"m":30,"type":"特急","dest":"三崎口","first":false},{"h":12,"m":34,"type":"特急","dest":"羽田空港","first":false},{"h":12,"m":36,"type":"普通","dest":"浦賀","first":true},{"h":12,"m":40,"type":"快特","dest":"京急久里浜","first":false},{"h":12,"m":45,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":12,"m":46,"type":"普通","dest":"浦賀","first":true},{"h":12,"m":50,"type":"特急","dest":"三崎口","first":false},{"h":12,"m":54,"type":"特急","dest":"羽田空港","first":false},{"h":12,"m":56,"type":"普通","dest":"浦賀","first":true},{"h":13,"m":0,"type":"快特","dest":"京急久里浜","first":false},{"h":13,"m":5,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":13,"m":6,"type":"普通","dest":"浦賀","first":true},{"h":13,"m":10,"type":"特急","dest":"三崎口","first":false},{"h":13,"m":14,"type":"特急","dest":"羽田空港","first":false},{"h":13,"m":16,"type":"普通","dest":"浦賀","first":true},{"h":13,"m":20,"type":"快特","dest":"京急久里浜","first":false},{"h":13,"m":25,"type":"快特","dest":"羽田空港","first":false},{"h":13,"m":26,"type":"普通","dest":"浦賀","first":true},{"h":13,"m":30,"type":"特急","dest":"三崎口","first":false},{"h":13,"m":34,"type":"特急","dest":"羽田空港","first":false},{"h":13,"m":36,"type":"普通","dest":"浦賀","first":true},{"h":13,"m":40,"type":"快特","dest":"京急久里浜","first":false},{"h":13,"m":45,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":13,"m":46,"type":"普通","dest":"浦賀","first":true},{"h":13,"m":50,"type":"特急","dest":"三崎口","first":false},{"h":13,"m":54,"type":"特急","dest":"羽田空港","first":false},{"h":13,"m":56,"type":"普通","dest":"浦賀","first":true},{"h":14,"m":0,"type":"快特","dest":"京急久里浜","first":false},{"h":14,"m":5,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":14,"m":6,"type":"普通","dest":"浦賀","first":true},{"h":14,"m":10,"type":"特急","dest":"三崎口","first":false},{"h":14,"m":14,"type":"特急","dest":"羽田空港","first":false},{"h":14,"m":16,"type":"普通","dest":"浦賀","first":true},{"h":14,"m":20,"type":"快特","dest":"京急久里浜","first":false},{"h":14,"m":25,"type":"快特","dest":"羽田空港","first":false},{"h":14,"m":26,"type":"普通","dest":"浦賀","first":true},{"h":14,"m":30,"type":"特急","dest":"三崎口","first":false},{"h":14,"m":34,"type":"特急","dest":"羽田空港","first":false},{"h":14,"m":36,"type":"普通","dest":"浦賀","first":true},{"h":14,"m":40,"type":"快特","dest":"京急久里浜","first":false},{"h":14,"m":45,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":14,"m":46,"type":"普通","dest":"浦賀","first":true},{"h":14,"m":50,"type":"特急","dest":"三崎口","first":false},{"h":14,"m":54,"type":"特急","dest":"羽田空港","first":false},{"h":14,"m":56,"type":"普通","dest":"浦賀","first":true},{"h":15,"m":0,"type":"快特","dest":"京急久里浜","first":false},{"h":15,"m":5,"type":"快特","dest":"羽田空港","first":false},{"h":15,"m":6,"type":"普通","dest":"浦賀","first":true},{"h":15,"m":10,"type":"特急","dest":"三崎口","first":false},{"h":15,"m":14,"type":"特急","dest":"羽田空港","first":false},{"h":15,"m":16,"type":"普通","dest":"浦賀","first":true},{"h":15,"m":20,"type":"快特","dest":"京急久里浜","first":false},{"h":15,"m":25,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":15,"m":26,"type":"普通","dest":"浦賀","first":true},{"h":15,"m":30,"type":"特急","dest":"三崎口","first":false},{"h":15,"m":34,"type":"特急","dest":"羽田空港","first":false},{"h":15,"m":36,"type":"普通","dest":"浦賀","first":true},{"h":15,"m":40,"type":"快特","dest":"京急久里浜","first":false},{"h":15,"m":45,"type":"快特","dest":"羽田空港","first":false},{"h":15,"m":46,"type":"普通","dest":"浦賀","first":true},{"h":15,"m":50,"type":"特急","dest":"三崎口","first":false},{"h":15,"m":54,"type":"特急","dest":"羽田空港","first":false},{"h":15,"m":56,"type":"普通","dest":"浦賀","first":true},{"h":16,"m":0,"type":"快特","dest":"京急久里浜","first":false},{"h":16,"m":5,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":16,"m":6,"type":"普通","dest":"浦賀","first":true},{"h":16,"m":10,"type":"特急","dest":"三崎口","first":false},{"h":16,"m":14,"type":"特急","dest":"羽田空港","first":false},{"h":16,"m":16,"type":"普通","dest":"浦賀","first":true},{"h":16,"m":20,"type":"快特","dest":"京急久里浜","first":false},{"h":16,"m":25,"type":"快特","dest":"羽田空港","first":false},{"h":16,"m":26,"type":"普通","dest":"浦賀","first":true},{"h":16,"m":30,"type":"特急","dest":"三崎口","first":false},{"h":16,"m":34,"type":"特急","dest":"羽田空港","first":false},{"h":16,"m":36,"type":"普通","dest":"浦賀","first":true},{"h":16,"m":40,"type":"快特","dest":"京急久里浜","first":false},{"h":16,"m":45,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":16,"m":46,"type":"普通","dest":"浦賀","first":true},{"h":16,"m":50,"type":"特急","dest":"三崎口","first":false},{"h":16,"m":54,"type":"特急","dest":"羽田空港","first":false},{"h":16,"m":56,"type":"普通","dest":"浦賀","first":true},{"h":17,"m":0,"type":"快特","dest":"京急久里浜","first":false},{"h":17,"m":5,"type":"快特","dest":"羽田空港","first":false},{"h":17,"m":6,"type":"普通","dest":"浦賀","first":true},{"h":17,"m":10,"type":"特急","dest":"三崎口","first":false},{"h":17,"m":14,"type":"特急","dest":"羽田空港","first":false},{"h":17,"m":16,"type":"普通","dest":"浦賀","first":true},{"h":17,"m":20,"type":"快特","dest":"京急久里浜","first":false},{"h":17,"m":25,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":17,"m":26,"type":"普通","dest":"浦賀","first":true},{"h":17,"m":30,"type":"特急","dest":"三崎口","first":false},{"h":17,"m":34,"type":"特急","dest":"羽田空港","first":false},{"h":17,"m":36,"type":"普通","dest":"浦賀","first":true},{"h":17,"m":40,"type":"快特","dest":"京急久里浜","first":false},{"h":17,"m":45,"type":"快特","dest":"羽田空港","first":false},{"h":17,"m":46,"type":"普通","dest":"浦賀","first":true},{"h":17,"m":50,"type":"特急","dest":"三崎口","first":false},{"h":17,"m":54,"type":"特急","dest":"羽田空港","first":false},{"h":17,"m":56,"type":"普通","dest":"浦賀","first":true},{"h":18,"m":0,"type":"快特","dest":"京急久里浜","first":false},{"h":18,"m":5,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":18,"m":6,"type":"普通","dest":"浦賀","first":true},{"h":18,"m":10,"type":"特急","dest":"三崎口","first":false},{"h":18,"m":14,"type":"特急","dest":"羽田空港","first":false},{"h":18,"m":16,"type":"普通","dest":"浦賀","first":true},{"h":18,"m":20,"type":"快特","dest":"京急久里浜","first":false},{"h":18,"m":25,"type":"快特","dest":"羽田空港","first":false},{"h":18,"m":26,"type":"普通","dest":"浦賀","first":true},{"h":18,"m":30,"type":"特急","dest":"三崎口","first":false},{"h":18,"m":34,"type":"特急","dest":"羽田空港","first":false},{"h":18,"m":36,"type":"普通","dest":"浦賀","first":true},{"h":18,"m":40,"type":"快特","dest":"京急久里浜","first":false},{"h":18,"m":45,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":18,"m":46,"type":"普通","dest":"浦賀","first":true},{"h":18,"m":50,"type":"特急","dest":"三崎口","first":false},{"h":18,"m":54,"type":"特急","dest":"羽田空港","first":false},{"h":18,"m":56,"type":"普通","dest":"浦賀","first":true},{"h":19,"m":0,"type":"快特","dest":"京急久里浜","first":false},{"h":19,"m":5,"type":"快特","dest":"羽田空港","first":false},{"h":19,"m":6,"type":"普通","dest":"浦賀","first":true},{"h":19,"m":10,"type":"特急","dest":"三崎口","first":false},{"h":19,"m":14,"type":"特急","dest":"羽田空港","first":false},{"h":19,"m":16,"type":"普通","dest":"浦賀","first":true},{"h":19,"m":20,"type":"快特","dest":"京急久里浜","first":false},{"h":19,"m":25,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":19,"m":26,"type":"普通","dest":"浦賀","first":true},{"h":19,"m":30,"type":"特急","dest":"三崎口","first":false},{"h":19,"m":34,"type":"特急","dest":"羽田空港","first":false},{"h":19,"m":36,"type":"普通","dest":"浦賀","first":true},{"h":19,"m":40,"type":"快特","dest":"京急久里浜","first":false},{"h":19,"m":45,"type":"快特","dest":"羽田空港","first":false},{"h":19,"m":46,"type":"普通","dest":"浦賀","first":true},{"h":19,"m":50,"type":"特急","dest":"三崎口","first":false},{"h":19,"m":54,"type":"特急","dest":"羽田空港","first":false},{"h":19,"m":56,"type":"普通","dest":"浦賀","first":true},{"h":20,"m":0,"type":"快特","dest":"京急久里浜","first":false},{"h":20,"m":5,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":20,"m":6,"type":"普通","dest":"浦賀","first":true},{"h":20,"m":10,"type":"特急","dest":"三崎口","first":false},{"h":20,"m":14,"type":"特急","dest":"羽田空港","first":false},{"h":20,"m":16,"type":"普通","dest":"浦賀","first":true},{"h":20,"m":20,"type":"快特","dest":"京急久里浜","first":false},{"h":20,"m":25,"type":"快特","dest":"羽田空港","first":false},{"h":20,"m":26,"type":"普通","dest":"浦賀","first":true},{"h":20,"m":30,"type":"特急","dest":"三崎口","first":false},{"h":20,"m":34,"type":"特急","dest":"羽田空港","first":false},{"h":20,"m":36,"type":"普通","dest":"浦賀","first":true},{"h":20,"m":40,"type":"快特","dest":"京急久里浜","first":false},{"h":20,"m":45,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":20,"m":46,"type":"普通","dest":"浦賀","first":true},{"h":20,"m":50,"type":"特急","dest":"三崎口","first":false},{"h":20,"m":54,"type":"特急","dest":"羽田空港","first":false},{"h":20,"m":56,"type":"普通","dest":"浦賀","first":true},{"h":21,"m":1,"type":"快特","dest":"京急久里浜","first":false},{"h":21,"m":6,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":21,"m":7,"type":"普通","dest":"浦賀","first":true},{"h":21,"m":12,"type":"特急","dest":"三崎口","first":false},{"h":21,"m":16,"type":"特急","dest":"羽田空港","first":false},{"h":21,"m":18,"type":"普通","dest":"浦賀","first":true},{"h":21,"m":23,"type":"快特","dest":"京急久里浜","first":false},{"h":21,"m":28,"type":"快特","dest":"羽田空港","first":false},{"h":21,"m":29,"type":"普通","dest":"浦賀","first":true},{"h":21,"m":35,"type":"特急","dest":"三崎口","first":false},{"h":21,"m":38,"type":"普通","dest":"浦賀","first":true},{"h":21,"m":42,"type":"急行","dest":"羽田空港","first":false},{"h":21,"m":48,"type":"特急","dest":"逗子・葉山","first":false},{"h":21,"m":50,"type":"普通","dest":"浦賀","first":true},{"h":21,"m":55,"type":"特急","dest":"京急久里浜","first":false},{"h":21,"m":58,"type":"特急","dest":"羽田空港","first":false},{"h":22,"m":1,"type":"普通","dest":"浦賀","first":true},{"h":22,"m":7,"type":"快特","dest":"京急久里浜","first":false},{"h":22,"m":10,"type":"急行","dest":"羽田空港","first":false},{"h":22,"m":13,"type":"普通","dest":"金沢文庫","first":true},{"h":22,"m":19,"type":"特急","dest":"浦賀","first":false},{"h":22,"m":22,"type":"急行","dest":"羽田空港","first":false},{"h":22,"m":26,"type":"普通","dest":"浦賀","first":true},{"h":22,"m":32,"type":"快特","dest":"京急久里浜","first":false},{"h":22,"m":34,"type":"普通","dest":"金沢文庫","first":true},{"h":22,"m":39,"type":"特急","dest":"浦賀","first":false},{"h":22,"m":42,"type":"急行","dest":"羽田空港","first":false},{"h":22,"m":47,"type":"普通","dest":"逗子・葉山","first":true},{"h":22,"m":52,"type":"特急","dest":"三崎口","first":false},{"h":22,"m":55,"type":"普通","dest":"神奈川新町","first":true},{"h":23,"m":0,"type":"急行","dest":"羽田空港","first":false},{"h":23,"m":3,"type":"特急","dest":"京急久里浜","first":false},{"h":23,"m":7,"type":"普通","dest":"金沢文庫","first":true},{"h":23,"m":12,"type":"急行","dest":"羽田空港","first":false},{"h":23,"m":17,"type":"特急","dest":"京急久里浜","first":false},{"h":23,"m":20,"type":"普通","dest":"浦賀","first":true},{"h":23,"m":25,"type":"特急","dest":"三浦海岸","first":false},{"h":23,"m":32,"type":"普通","dest":"金沢文庫","first":true},{"h":23,"m":40,"type":"特急","dest":"逗子・葉山","first":false},{"h":23,"m":42,"type":"急行","dest":"羽田空港","first":true},{"h":23,"m":48,"type":"普通","dest":"神奈川新町","first":true},{"h":23,"m":54,"type":"特急","dest":"神奈川新町","first":false},{"h":23,"m":59,"type":"普通","dest":"京急川崎","first":true},{"h":0,"m":6,"type":"普通","dest":"京急川崎","first":true}],"平日":[{"h":5,"m":2,"type":"普通","dest":"神奈川新町","first":true},{"h":5,"m":9,"type":"特急","dest":"羽田空港","first":false},{"h":5,"m":18,"type":"普通","dest":"逗子・葉山","first":true},{"h":5,"m":28,"type":"快特","dest":"羽田空港","first":false},{"h":5,"m":34,"type":"普通","dest":"京急久里浜","first":true},{"h":5,"m":41,"type":"急行","dest":"羽田空港","first":false},{"h":5,"m":44,"type":"特急","dest":"三崎口","first":false},{"h":5,"m":51,"type":"快特","dest":"羽田空港","first":false},{"h":5,"m":54,"type":"普通","dest":"逗子・葉山","first":true},{"h":6,"m":1,"type":"特急","dest":"三崎口","first":false},{"h":6,"m":5,"type":"普通","dest":"逗子・葉山","first":true},{"h":6,"m":10,"type":"急行","dest":"羽田空港","first":false},{"h":6,"m":18,"type":"快特","dest":"羽田空港","first":false},{"h":6,"m":20,"type":"特急","dest":"三崎口","first":true},{"h":6,"m":23,"type":"普通","dest":"浦賀","first":true},{"h":6,"m":29,"type":"急行","dest":"羽田空港","first":false},{"h":6,"m":31,"type":"普通","dest":"逗子・葉山","first":true},{"h":6,"m":34,"type":"急行","dest":"羽田空港","first":false},{"h":6,"m":37,"type":"特急","dest":"三崎口","first":false},{"h":6,"m":41,"type":"急行","dest":"羽田空港","first":false},{"h":6,"m":44,"type":"普通","dest":"浦賀","first":true},{"h":6,"m":47,"type":"快特","dest":"羽田空港","first":false},{"h":6,"m":50,"type":"特急","dest":"浦賀","first":false},{"h":6,"m":52,"type":"普通","dest":"逗子・葉山","first":true},{"h":6,"m":55,"type":"急行","dest":"羽田空港","first":false},{"h":6,"m":58,"type":"特急","dest":"三崎口","first":false},{"h":7,"m":0,"type":"普通","dest":"逗子・葉山","first":true},{"h":7,"m":3,"type":"急行","dest":"羽田空港","first":false},{"h":7,"m":8,"type":"急行","dest":"羽田空港","first":false},{"h":7,"m":11,"type":"普通","dest":"逗子・葉山","first":true},{"h":7,"m":14,"type":"特急","dest":"三崎口","first":false},{"h":7,"m":20,"type":"急行","dest":"羽田空港","first":false},{"h":7,"m":22,"type":"普通","dest":"神奈川新町","first":true},{"h":7,"m":24,"type":"特急","dest":"三崎口","first":false},{"h":7,"m":29,"type":"急行","dest":"羽田空港","first":false},{"h":7,"m":31,"type":"普通","dest":"逗子・葉山","first":true},{"h":7,"m":34,"type":"特急","dest":"三崎口","first":false},{"h":7,"m":36,"type":"快特","dest":"羽田空港","first":false},{"h":7,"m":38,"type":"急行","dest":"羽田空港","first":false},{"h":7,"m":41,"type":"特急","dest":"三崎口","first":false},{"h":7,"m":42,"type":"普通","dest":"神奈川新町","first":true},{"h":7,"m":45,"type":"快特","dest":"羽田空港","first":false},{"h":7,"m":49,"type":"特急","dest":"三崎口","first":false},{"h":7,"m":52,"type":"急行","dest":"羽田空港","first":false},{"h":7,"m":53,"type":"普通","dest":"浦賀","first":true},{"h":7,"m":57,"type":"特急","dest":"京急久里浜","first":false},{"h":7,"m":59,"type":"快特","dest":"羽田空港","first":false},{"h":8,"m":2,"type":"急行","dest":"羽田空港","first":false},{"h":8,"m":3,"type":"普通","dest":"金沢文庫","first":true},{"h":8,"m":8,"type":"特急","dest":"三崎口","first":false},{"h":8,"m":10,"type":"快特","dest":"京急久里浜","first":false},{"h":8,"m":12,"type":"急行","dest":"羽田空港","first":false},{"h":8,"m":13,"type":"普通","dest":"神奈川新町","first":true},{"h":8,"m":18,"type":"特急","dest":"三崎口","first":false},{"h":8,"m":23,"type":"急行","dest":"羽田空港","first":false},{"h":8,"m":24,"type":"普通","dest":"浦賀","first":true},{"h":8,"m":28,"type":"特急","dest":"三崎口","first":false},{"h":8,"m":31,"type":"快特","dest":"京急久里浜","first":false},{"h":8,"m":33,"type":"急行","dest":"羽田空港","first":false},{"h":8,"m":35,"type":"普通","dest":"神奈川新町","first":true},{"h":8,"m":38,"type":"特急","dest":"三崎口","first":false},{"h":8,"m":42,"type":"急行","dest":"羽田空港","first":false},{"h":8,"m":45,"type":"普通","dest":"神奈川新町","first":true},{"h":8,"m":49,"type":"特急","dest":"京急久里浜","first":false},{"h":8,"m":52,"type":"急行","dest":"羽田空港","first":false},{"h":8,"m":56,"type":"普通","dest":"金沢文庫","first":true},{"h":9,"m":0,"type":"特急","dest":"三崎口","first":false},{"h":9,"m":3,"type":"急行","dest":"羽田空港","first":false},{"h":9,"m":7,"type":"普通","dest":"浦賀","first":true},{"h":9,"m":10,"type":"特急","dest":"京急久里浜","first":false},{"h":9,"m":13,"type":"急行","dest":"羽田空港","first":false},{"h":9,"m":17,"type":"普通","dest":"浦賀","first":true},{"h":9,"m":19,"type":"特急","dest":"三崎口","first":false},{"h":9,"m":25,"type":"急行","dest":"羽田空港","first":false},{"h":9,"m":28,"type":"普通","dest":"浦賀","first":true},{"h":9,"m":31,"type":"特急","dest":"京急久里浜","first":false},{"h":9,"m":34,"type":"特急","dest":"羽田空港","first":false},{"h":9,"m":36,"type":"急行","dest":"逗子・葉山","first":false},{"h":9,"m":38,"type":"普通","dest":"浦賀","first":true},{"h":9,"m":41,"type":"特急","dest":"三崎口","first":false},{"h":9,"m":44,"type":"快特","dest":"羽田空港","first":false},{"h":9,"m":48,"type":"普通","dest":"浦賀","first":true},{"h":9,"m":51,"type":"特急","dest":"京急久里浜","first":false},{"h":9,"m":54,"type":"急行","dest":"羽田空港","first":false},{"h":9,"m":59,"type":"普通","dest":"神奈川新町","first":true},{"h":10,"m":2,"type":"特急","dest":"三崎口","first":false},{"h":10,"m":5,"type":"急行","dest":"羽田空港","first":false},{"h":10,"m":10,"type":"普通","dest":"浦賀","first":true},{"h":10,"m":14,"type":"快特","dest":"三崎口","first":false},{"h":10,"m":17,"type":"急行","dest":"羽田空港","first":false},{"h":10,"m":19,"type":"普通","dest":"神奈川新町","first":true},{"h":10,"m":22,"type":"特急","dest":"京急久里浜","first":false},{"h":10,"m":27,"type":"急行","dest":"羽田空港","first":false},{"h":10,"m":30,"type":"特急","dest":"三崎口","first":false},{"h":10,"m":32,"type":"普通","dest":"浦賀","first":true},{"h":10,"m":36,"type":"急行","dest":"羽田空港","first":false},{"h":10,"m":39,"type":"快特","dest":"京急久里浜","first":false},{"h":10,"m":41,"type":"普通","dest":"浦賀","first":true},{"h":10,"m":45,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":10,"m":50,"type":"特急","dest":"三崎口","first":false},{"h":10,"m":53,"type":"特急","dest":"羽田空港","first":false},{"h":10,"m":55,"type":"普通","dest":"浦賀","first":true},{"h":11,"m":0,"type":"快特","dest":"京急久里浜","first":false},{"h":11,"m":5,"type":"快特","dest":"羽田空港","first":false},{"h":11,"m":6,"type":"普通","dest":"浦賀","first":true},{"h":11,"m":10,"type":"特急","dest":"三崎口","first":false},{"h":11,"m":14,"type":"特急","dest":"羽田空港","first":false},{"h":11,"m":16,"type":"普通","dest":"浦賀","first":true},{"h":11,"m":20,"type":"快特","dest":"京急久里浜","first":false},{"h":11,"m":25,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":11,"m":26,"type":"普通","dest":"浦賀","first":true},{"h":11,"m":30,"type":"特急","dest":"三崎口","first":false},{"h":11,"m":34,"type":"特急","dest":"羽田空港","first":false},{"h":11,"m":36,"type":"普通","dest":"浦賀","first":true},{"h":11,"m":40,"type":"快特","dest":"京急久里浜","first":false},{"h":11,"m":45,"type":"快特","dest":"羽田空港","first":false},{"h":11,"m":46,"type":"普通","dest":"浦賀","first":true},{"h":11,"m":50,"type":"特急","dest":"三崎口","first":false},{"h":11,"m":54,"type":"特急","dest":"羽田空港","first":false},{"h":11,"m":56,"type":"普通","dest":"浦賀","first":true},{"h":12,"m":0,"type":"快特","dest":"京急久里浜","first":false},{"h":12,"m":5,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":12,"m":6,"type":"普通","dest":"浦賀","first":true},{"h":12,"m":10,"type":"特急","dest":"三崎口","first":false},{"h":12,"m":14,"type":"特急","dest":"羽田空港","first":false},{"h":12,"m":16,"type":"普通","dest":"神奈川新町","first":true},{"h":12,"m":20,"type":"快特","dest":"京急久里浜","first":false},{"h":12,"m":25,"type":"快特","dest":"羽田空港","first":false},{"h":12,"m":26,"type":"普通","dest":"浦賀","first":true},{"h":12,"m":30,"type":"特急","dest":"三崎口","first":false},{"h":12,"m":34,"type":"特急","dest":"羽田空港","first":false},{"h":12,"m":36,"type":"普通","dest":"金沢文庫","first":true},{"h":12,"m":40,"type":"快特","dest":"京急久里浜","first":false},{"h":12,"m":45,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":12,"m":46,"type":"普通","dest":"浦賀","first":true},{"h":12,"m":50,"type":"特急","dest":"三崎口","first":false},{"h":12,"m":54,"type":"特急","dest":"羽田空港","first":false},{"h":12,"m":56,"type":"普通","dest":"神奈川新町","first":true},{"h":13,"m":0,"type":"快特","dest":"京急久里浜","first":false},{"h":13,"m":5,"type":"快特","dest":"羽田空港","first":false},{"h":13,"m":6,"type":"普通","dest":"浦賀","first":true},{"h":13,"m":10,"type":"特急","dest":"三崎口","first":false},{"h":13,"m":14,"type":"特急","dest":"羽田空港","first":false},{"h":13,"m":16,"type":"普通","dest":"神奈川新町","first":true},{"h":13,"m":20,"type":"快特","dest":"京急久里浜","first":false},{"h":13,"m":25,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":13,"m":26,"type":"普通","dest":"浦賀","first":true},{"h":13,"m":30,"type":"特急","dest":"三崎口","first":false},{"h":13,"m":34,"type":"特急","dest":"羽田空港","first":false},{"h":13,"m":36,"type":"普通","dest":"神奈川新町","first":true},{"h":13,"m":40,"type":"快特","dest":"京急久里浜","first":false},{"h":13,"m":45,"type":"快特","dest":"羽田空港","first":false},{"h":13,"m":46,"type":"普通","dest":"浦賀","first":true},{"h":13,"m":50,"type":"特急","dest":"三崎口","first":false},{"h":13,"m":54,"type":"特急","dest":"羽田空港","first":false},{"h":13,"m":56,"type":"普通","dest":"神奈川新町","first":true},{"h":14,"m":0,"type":"快特","dest":"京急久里浜","first":false},{"h":14,"m":5,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":14,"m":6,"type":"普通","dest":"浦賀","first":true},{"h":14,"m":10,"type":"特急","dest":"三崎口","first":false},{"h":14,"m":14,"type":"特急","dest":"羽田空港","first":false},{"h":14,"m":16,"type":"普通","dest":"浦賀","first":true},{"h":14,"m":20,"type":"快特","dest":"京急久里浜","first":false},{"h":14,"m":25,"type":"快特","dest":"羽田空港","first":false},{"h":14,"m":26,"type":"普通","dest":"浦賀","first":true},{"h":14,"m":30,"type":"特急","dest":"三崎口","first":false},{"h":14,"m":34,"type":"特急","dest":"羽田空港","first":false},{"h":14,"m":36,"type":"普通","dest":"浦賀","first":true},{"h":14,"m":40,"type":"快特","dest":"京急久里浜","first":false},{"h":14,"m":45,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":14,"m":46,"type":"普通","dest":"浦賀","first":true},{"h":14,"m":50,"type":"特急","dest":"三崎口","first":false},{"h":14,"m":54,"type":"特急","dest":"羽田空港","first":false},{"h":14,"m":56,"type":"普通","dest":"浦賀","first":true},{"h":15,"m":0,"type":"快特","dest":"京急久里浜","first":false},{"h":15,"m":5,"type":"快特","dest":"羽田空港","first":false},{"h":15,"m":6,"type":"普通","dest":"金沢文庫","first":true},{"h":15,"m":10,"type":"特急","dest":"三崎口","first":false},{"h":15,"m":14,"type":"特急","dest":"羽田空港","first":false},{"h":15,"m":16,"type":"普通","dest":"浦賀","first":true},{"h":15,"m":20,"type":"快特","dest":"京急久里浜","first":false},{"h":15,"m":25,"type":"エアポート快特","dest":"羽田空港","first":false},{"h":15,"m":26,"type":"普通","dest":"浦賀","first":true},{"h":15,"m":30,"type":"特急","dest":"三崎口","first":false},{"h":15,"m":35,"type":"快特","dest":"羽田空港","first":false},{"h":15,"m":36,"type":"普通","dest":"浦賀","first":true},{"h":15,"m":40,"type":"快特","dest":"京急久里浜","first":false},{"h":15,"m":45,"type":"快特","dest":"羽田空港","first":false},{"h":15,"m":46,"type":"普通","dest":"浦賀","first":true},{"h":15,"m":49,"type":"特急","dest":"三崎口","first":false},{"h":15,"m":54,"type":"快特","dest":"羽田空港","first":false},{"h":15,"m":56,"type":"普通","dest":"浦賀","first":true},{"h":15,"m":59,"type":"快特","dest":"京急久里浜","first":false},{"h":16,"m":1,"type":"普通","dest":"浦賀","first":true},{"h":16,"m":4,"type":"快特","dest":"羽田空港","first":false},{"h":16,"m":9,"type":"特急","dest":"羽田空港","first":false},{"h":16,"m":11,"type":"普通","dest":"浦賀","first":true},{"h":16,"m":13,"type":"快特","dest":"京急久里浜","first":true},{"h":16,"m":16,"type":"急行","dest":"羽田空港","first":false},{"h":16,"m":18,"type":"普通","dest":"浦賀","first":true},{"h":16,"m":23,"type":"快特","dest":"三崎口","first":false},{"h":16,"m":25,"type":"普通","dest":"浦賀","first":true},{"h":16,"m":28,"type":"急行","dest":"羽田空港","first":false},{"h":16,"m":32,"type":"快特","dest":"三崎口","first":true},{"h":16,"m":35,"type":"普通","dest":"逗子・葉山","first":true},{"h":16,"m":38,"type":"急行","dest":"羽田空港","first":false},{"h":16,"m":44,"type":"特急","dest":"三崎口","first":false},{"h":16,"m":46,"type":"普通","dest":"浦賀","first":true},{"h":16,"m":49,"type":"急行","dest":"羽田空港","first":false},{"h":16,"m":53,"type":"快特","dest":"京急久里浜","first":true},{"h":16,"m":55,"type":"普通","dest":"浦賀","first":true},{"h":16,"m":58,"type":"特急","dest":"京急久里浜","first":false},{"h":17,"m":0,"type":"普通","dest":"浦賀","first":true},{"h":17,"m":3,"type":"急行","dest":"羽田空港","first":false},{"h":17,"m":8,"type":"特急","dest":"三崎口","first":false},{"h":17,"m":10,"type":"普通","dest":"浦賀","first":true},{"h":17,"m":13,"type":"急行","dest":"羽田空港","first":false},{"h":17,"m":17,"type":"快特","dest":"三崎口","first":true},{"h":17,"m":19,"type":"特急","dest":"京急久里浜","first":false},{"h":17,"m":21,"type":"普通","dest":"浦賀","first":true},{"h":17,"m":24,"type":"急行","dest":"羽田空港","first":false},{"h":17,"m":26,"type":"快特","dest":"三崎口","first":true},{"h":17,"m":29,"type":"特急","dest":"京急久里浜","first":false},{"h":17,"m":30,"type":"普通","dest":"浦賀","first":true},{"h":17,"m":33,"type":"急行","dest":"羽田空港","first":false},{"h":17,"m":36,"type":"快特","dest":"三崎口","first":true},{"h":17,"m":39,"type":"特急","dest":"三崎口","first":false},{"h":17,"m":40,"type":"普通","dest":"浦賀","first":true},{"h":17,"m":43,"type":"急行","dest":"羽田空港","first":false},{"h":17,"m":46,"type":"快特","dest":"京急久里浜","first":true},{"h":17,"m":49,"type":"特急","dest":"三崎口","first":false},{"h":17,"m":50,"type":"普通","dest":"浦賀","first":true},{"h":17,"m":53,"type":"急行","dest":"羽田空港","first":false},{"h":17,"m":56,"type":"快特","dest":"京急久里浜","first":true},{"h":17,"m":59,"type":"特急","dest":"三崎口","first":false},{"h":18,"m":0,"type":"普通","dest":"浦賀","first":true},{"h":18,"m":3,"type":"急行","dest":"羽田空港","first":false},{"h":18,"m":5,"type":"快特","dest":"京急久里浜","first":true},{"h":18,"m":9,"type":"特急","dest":"三崎口","first":false},{"h":18,"m":10,"type":"普通","dest":"浦賀","first":true},{"h":18,"m":13,"type":"急行","dest":"羽田空港","first":false},{"h":18,"m":16,"type":"快特","dest":"京急久里浜","first":true},{"h":18,"m":19,"type":"特急","dest":"三崎口","first":false},{"h":18,"m":20,"type":"普通","dest":"浦賀","first":true},{"h":18,"m":23,"type":"急行","dest":"羽田空港","first":false},{"h":18,"m":25,"type":"快特","dest":"京急久里浜","first":true},{"h":18,"m":29,"type":"特急","dest":"京急久里浜","first":false},{"h":18,"m":31,"type":"普通","dest":"浦賀","first":true},{"h":18,"m":33,"type":"急行","dest":"羽田空港","first":false},{"h":18,"m":36,"type":"快特","dest":"三崎口","first":true},{"h":18,"m":39,"type":"特急","dest":"三崎口","first":false},{"h":18,"m":40,"type":"普通","dest":"浦賀","first":true},{"h":18,"m":43,"type":"急行","dest":"羽田空港","first":false},{"h":18,"m":45,"type":"ウィング","dest":"京急久里浜","first":true},{"h":18,"m":49,"type":"特急","dest":"京急久里浜","first":false},{"h":18,"m":51,"type":"普通","dest":"浦賀","first":true},{"h":18,"m":54,"type":"急行","dest":"羽田空港","first":false},{"h":18,"m":56,"type":"快特","dest":"三崎口","first":true},{"h":18,"m":59,"type":"特急","dest":"京急久里浜","first":false},{"h":19,"m":0,"type":"普通","dest":"浦賀","first":true},{"h":19,"m":3,"type":"急行","dest":"羽田空港","first":false},{"h":19,"m":5,"type":"ウィング","dest":"三崎口","first":true},{"h":19,"m":9,"type":"特急","dest":"京急久里浜","first":false},{"h":19,"m":10,"type":"普通","dest":"浦賀","first":true},{"h":19,"m":14,"type":"急行","dest":"羽田空港","first":false},{"h":19,"m":16,"type":"快特","dest":"三崎口","first":true},{"h":19,"m":19,"type":"特急","dest":"京急久里浜","first":false},{"h":19,"m":20,"type":"普通","dest":"浦賀","first":true},{"h":19,"m":24,"type":"急行","dest":"羽田空港","first":false},{"h":19,"m":25,"type":"ウィング","dest":"三崎口","first":true},{"h":19,"m":29,"type":"特急","dest":"三崎口","first":false},{"h":19,"m":31,"type":"普通","dest":"浦賀","first":true},{"h":19,"m":35,"type":"急行","dest":"羽田空港","first":false},{"h":19,"m":38,"type":"快特","dest":"京急久里浜","first":true},{"h":19,"m":40,"type":"普通","dest":"浦賀","first":true},{"h":19,"m":44,"type":"急行","dest":"羽田空港","first":false},{"h":19,"m":45,"type":"ウィング","dest":"三崎口","first":true},{"h":19,"m":49,"type":"快特","dest":"京急久里浜","first":false},{"h":19,"m":51,"type":"普通","dest":"浦賀","first":true},{"h":19,"m":55,"type":"急行","dest":"羽田空港","first":false},{"h":19,"m":57,"type":"快特","dest":"三崎口","first":true},{"h":19,"m":59,"type":"普通","dest":"浦賀","first":true},{"h":20,"m":2,"type":"急行","dest":"羽田空港","first":false},{"h":20,"m":5,"type":"ウィング","dest":"三崎口","first":true},{"h":20,"m":10,"type":"快特","dest":"京急久里浜","first":false},{"h":20,"m":12,"type":"普通","dest":"神奈川新町","first":true},{"h":20,"m":16,"type":"急行","dest":"羽田空港","first":false},{"h":20,"m":18,"type":"快特","dest":"三崎口","first":true},{"h":20,"m":20,"type":"普通","dest":"浦賀","first":true},{"h":20,"m":23,"type":"急行","dest":"羽田空港","first":false},{"h":20,"m":25,"type":"ウィング","dest":"三崎口","first":true},{"h":20,"m":28,"type":"快特","dest":"京急久里浜","first":false},{"h":20,"m":31,"type":"普通","dest":"浦賀","first":true},{"h":20,"m":34,"type":"急行","dest":"羽田空港","first":false},{"h":20,"m":36,"type":"快特","dest":"京急久里浜","first":true},{"h":20,"m":40,"type":"急行","dest":"羽田空港","first":false},{"h":20,"m":42,"type":"普通","dest":"浦賀","first":true},{"h":20,"m":45,"type":"ウィング","dest":"三崎口","first":true},{"h":20,"m":49,"type":"快特","dest":"京急久里浜","first":false},{"h":20,"m":51,"type":"普通","dest":"浦賀","first":true},{"h":20,"m":54,"type":"急行","dest":"羽田空港","first":false},{"h":20,"m":56,"type":"特急","dest":"三崎口","first":true},{"h":21,"m":0,"type":"普通","dest":"逗子・葉山","first":true},{"h":21,"m":3,"type":"急行","dest":"羽田空港","first":false},{"h":21,"m":5,"type":"ウィング","dest":"三崎口","first":true},{"h":21,"m":9,"type":"快特","dest":"京急久里浜","first":false},{"h":21,"m":10,"type":"普通","dest":"浦賀","first":true},{"h":21,"m":14,"type":"急行","dest":"羽田空港","first":false},{"h":21,"m":18,"type":"特急","dest":"三崎口","first":true},{"h":21,"m":20,"type":"普通","dest":"京急久里浜","first":true},{"h":21,"m":23,"type":"急行","dest":"羽田空港","first":false},{"h":21,"m":30,"type":"快特","dest":"三崎口","first":false},{"h":21,"m":32,"type":"普通","dest":"浦賀","first":true},{"h":21,"m":34,"type":"急行","dest":"羽田空港","first":false},{"h":21,"m":37,"type":"特急","dest":"三崎口","first":true},{"h":21,"m":40,"type":"普通","dest":"逗子・葉山","first":true},{"h":21,"m":43,"type":"急行","dest":"羽田空港","first":false},{"h":21,"m":50,"type":"快特","dest":"三崎口","first":false},{"h":21,"m":51,"type":"普通","dest":"浦賀","first":true},{"h":21,"m":56,"type":"急行","dest":"羽田空港","first":false},{"h":21,"m":59,"type":"特急","dest":"浦賀","first":true},{"h":22,"m":1,"type":"普通","dest":"浦賀","first":true},{"h":22,"m":4,"type":"急行","dest":"羽田空港","first":false},{"h":22,"m":10,"type":"快特","dest":"三崎口","first":false},{"h":22,"m":12,"type":"普通","dest":"逗子・葉山","first":true},{"h":22,"m":15,"type":"急行","dest":"羽田空港","first":false},{"h":22,"m":20,"type":"特急","dest":"浦賀","first":true},{"h":22,"m":23,"type":"急行","dest":"羽田空港","first":false},{"h":22,"m":24,"type":"普通","dest":"浦賀","first":true},{"h":22,"m":32,"type":"快特","dest":"三崎口","first":false},{"h":22,"m":34,"type":"普通","dest":"浦賀","first":true},{"h":22,"m":37,"type":"急行","dest":"羽田空港","first":false},{"h":22,"m":39,"type":"特急","dest":"三崎口","first":true},{"h":22,"m":45,"type":"急行","dest":"羽田空港","first":false},{"h":22,"m":47,"type":"普通","dest":"逗子・葉山","first":true},{"h":22,"m":50,"type":"特急","dest":"三崎口","first":false},{"h":23,"m":2,"type":"特急","dest":"京急久里浜","first":false},{"h":23,"m":3,"type":"普通","dest":"金沢文庫","first":true},{"h":23,"m":10,"type":"急行","dest":"羽田空港","first":false},{"h":23,"m":15,"type":"特急","dest":"三浦海岸","first":false},{"h":23,"m":18,"type":"急行","dest":"羽田空港","first":true},{"h":23,"m":19,"type":"普通","dest":"金沢文庫","first":true},{"h":23,"m":25,"type":"特急","dest":"京急久里浜","first":false},{"h":23,"m":32,"type":"特急","dest":"京急久里浜","first":false},{"h":23,"m":35,"type":"普通","dest":"上大岡","first":true},{"h":23,"m":45,"type":"特急","dest":"逗子・葉山","first":false},{"h":23,"m":47,"type":"普通","dest":"神奈川新町","first":true},{"h":23,"m":53,"type":"特急","dest":"神奈川新町","first":false},{"h":23,"m":59,"type":"急行","dest":"羽田空港","first":true},{"h":0,"m":2,"type":"特急","dest":"金沢文庫","first":false},{"h":0,"m":6,"type":"普通","dest":"京急川崎","first":true}]};
+const TT_UP={"平日":[{"h":5,"m":5,"type":"普通","dest":"品川","first":true},{"h":5,"m":20,"type":"普通","dest":"品川","first":true},{"h":5,"m":32,"type":"特急","dest":"羽田空港","first":false},{"h":5,"m":41,"type":"普通","dest":"品川","first":true},{"h":5,"m":50,"type":"特急","dest":"品川","first":false},{"h":5,"m":57,"type":"普通","dest":"品川","first":true},{"h":6,"m":7,"type":"特急","dest":"羽田空港","first":false},{"h":6,"m":13,"type":"快特","dest":"品川","first":false},{"h":6,"m":19,"type":"普通","dest":"品川","first":true},{"h":6,"m":23,"type":"特急","dest":"成田空港","first":false},{"h":6,"m":32,"type":"快特","dest":"泉岳寺","first":false},{"h":6,"m":38,"type":"特急","dest":"羽田空港","first":false},{"h":6,"m":45,"type":"快特","dest":"品川","first":false},{"h":6,"m":49,"type":"普通","dest":"神奈川新町","first":true},{"h":6,"m":53,"type":"特急","dest":"印旛日本医大","first":false},{"h":7,"m":1,"type":"特急","dest":"印旛日本医大","first":false},{"h":7,"m":7,"type":"特急","dest":"羽田空港","first":false},{"h":7,"m":13,"type":"快特","dest":"品川","first":false},{"h":7,"m":16,"type":"特急","dest":"成田空港","first":false},{"h":7,"m":21,"type":"特急","dest":"羽田空港","first":false},{"h":7,"m":26,"type":"快特","dest":"泉岳寺","first":false},{"h":7,"m":29,"type":"普通","dest":"品川","first":true},{"h":7,"m":34,"type":"特急","dest":"京成高砂","first":false},{"h":7,"m":40,"type":"特急","dest":"羽田空港","first":false},{"h":7,"m":45,"type":"快特","dest":"品川","first":false},{"h":7,"m":50,"type":"特急","dest":"印西牧の原","first":false},{"h":7,"m":55,"type":"特急","dest":"羽田空港","first":false},{"h":8,"m":1,"type":"特急","dest":"成田空港","first":false},{"h":8,"m":6,"type":"快特","dest":"品川","first":false},{"h":8,"m":12,"type":"特急","dest":"青砥","first":false},{"h":8,"m":18,"type":"快特","dest":"泉岳寺","first":false},{"h":8,"m":24,"type":"特急","dest":"羽田空港","first":false},{"h":8,"m":31,"type":"特急","dest":"京成高砂","first":false},{"h":8,"m":39,"type":"快特","dest":"品川","first":false},{"h":8,"m":44,"type":"特急","dest":"青砥","first":false},{"h":8,"m":51,"type":"快特","dest":"泉岳寺","first":false},{"h":8,"m":56,"type":"特急","dest":"羽田空港","first":false},{"h":9,"m":4,"type":"特急","dest":"京成高砂","first":false},{"h":9,"m":11,"type":"快特","dest":"泉岳寺","first":false},{"h":9,"m":16,"type":"特急","dest":"羽田空港","first":false},{"h":9,"m":24,"type":"特急","dest":"青砥","first":false},{"h":9,"m":31,"type":"快特","dest":"泉岳寺","first":false},{"h":9,"m":36,"type":"普通","dest":"品川","first":true},{"h":9,"m":44,"type":"特急","dest":"京成高砂","first":false},{"h":9,"m":51,"type":"快特","dest":"泉岳寺","first":false},{"h":10,"m":4,"type":"特急","dest":"印旛日本医大","first":false},{"h":10,"m":11,"type":"快特","dest":"泉岳寺","first":false},{"h":10,"m":24,"type":"特急","dest":"京成高砂","first":false},{"h":10,"m":31,"type":"快特","dest":"泉岳寺","first":false},{"h":10,"m":44,"type":"特急","dest":"印旛日本医大","first":false},{"h":10,"m":51,"type":"快特","dest":"泉岳寺","first":false},{"h":11,"m":4,"type":"特急","dest":"京成高砂","first":false},{"h":11,"m":11,"type":"快特","dest":"泉岳寺","first":false},{"h":11,"m":24,"type":"特急","dest":"印旛日本医大","first":false},{"h":11,"m":31,"type":"快特","dest":"泉岳寺","first":false},{"h":11,"m":44,"type":"特急","dest":"京成高砂","first":false},{"h":11,"m":51,"type":"快特","dest":"泉岳寺","first":false},{"h":12,"m":4,"type":"特急","dest":"印旛日本医大","first":false},{"h":12,"m":11,"type":"快特","dest":"泉岳寺","first":false},{"h":12,"m":24,"type":"特急","dest":"京成高砂","first":false},{"h":12,"m":31,"type":"快特","dest":"泉岳寺","first":false},{"h":12,"m":44,"type":"特急","dest":"印旛日本医大","first":false},{"h":12,"m":51,"type":"快特","dest":"泉岳寺","first":false},{"h":13,"m":4,"type":"特急","dest":"京成高砂","first":false},{"h":13,"m":11,"type":"快特","dest":"泉岳寺","first":false},{"h":13,"m":24,"type":"特急","dest":"印旛日本医大","first":false},{"h":13,"m":31,"type":"快特","dest":"泉岳寺","first":false},{"h":13,"m":44,"type":"特急","dest":"京成高砂","first":false},{"h":13,"m":51,"type":"快特","dest":"泉岳寺","first":false},{"h":14,"m":4,"type":"特急","dest":"印旛日本医大","first":false},{"h":14,"m":11,"type":"快特","dest":"泉岳寺","first":false},{"h":14,"m":24,"type":"特急","dest":"京成高砂","first":false},{"h":14,"m":31,"type":"快特","dest":"泉岳寺","first":false},{"h":14,"m":44,"type":"特急","dest":"印旛日本医大","first":false},{"h":14,"m":51,"type":"快特","dest":"泉岳寺","first":false},{"h":15,"m":4,"type":"特急","dest":"京成高砂","first":false},{"h":15,"m":11,"type":"快特","dest":"泉岳寺","first":false},{"h":15,"m":24,"type":"特急","dest":"印旛日本医大","first":false},{"h":15,"m":31,"type":"快特","dest":"泉岳寺","first":false},{"h":15,"m":44,"type":"特急","dest":"京成高砂","first":false},{"h":15,"m":51,"type":"快特","dest":"泉岳寺","first":false},{"h":16,"m":4,"type":"特急","dest":"印旛日本医大","first":false},{"h":16,"m":11,"type":"快特","dest":"泉岳寺","first":false},{"h":16,"m":21,"type":"特急","dest":"青砥","first":false},{"h":16,"m":31,"type":"快特","dest":"品川","first":false},{"h":16,"m":41,"type":"特急","dest":"成田空港","first":false},{"h":16,"m":51,"type":"快特","dest":"泉岳寺","first":false},{"h":17,"m":1,"type":"特急","dest":"京成高砂","first":false},{"h":17,"m":11,"type":"快特","dest":"品川","first":false},{"h":17,"m":21,"type":"特急","dest":"印旛日本医大","first":false},{"h":17,"m":31,"type":"快特","dest":"泉岳寺","first":false},{"h":17,"m":41,"type":"特急","dest":"京成高砂","first":false},{"h":17,"m":51,"type":"快特","dest":"品川","first":false},{"h":18,"m":1,"type":"特急","dest":"印旛日本医大","first":false},{"h":18,"m":11,"type":"快特","dest":"泉岳寺","first":false},{"h":18,"m":21,"type":"特急","dest":"京成高砂","first":false},{"h":18,"m":31,"type":"快特","dest":"品川","first":false},{"h":18,"m":41,"type":"特急","dest":"青砥","first":false},{"h":18,"m":51,"type":"快特","dest":"泉岳寺","first":false},{"h":19,"m":1,"type":"特急","dest":"京成高砂","first":false},{"h":19,"m":11,"type":"快特","dest":"品川","first":false},{"h":19,"m":21,"type":"特急","dest":"印西牧の原","first":false},{"h":19,"m":31,"type":"快特","dest":"泉岳寺","first":false},{"h":19,"m":41,"type":"特急","dest":"京成高砂","first":false},{"h":19,"m":51,"type":"快特","dest":"品川","first":false},{"h":20,"m":1,"type":"特急","dest":"青砥","first":false},{"h":20,"m":11,"type":"快特","dest":"泉岳寺","first":false},{"h":20,"m":21,"type":"特急","dest":"京成高砂","first":false},{"h":20,"m":31,"type":"快特","dest":"品川","first":false},{"h":20,"m":41,"type":"特急","dest":"青砥","first":false},{"h":20,"m":51,"type":"快特","dest":"泉岳寺","first":false},{"h":21,"m":2,"type":"特急","dest":"京成高砂","first":false},{"h":21,"m":12,"type":"快特","dest":"品川","first":false},{"h":21,"m":22,"type":"特急","dest":"青砥","first":false},{"h":21,"m":32,"type":"快特","dest":"泉岳寺","first":false},{"h":21,"m":42,"type":"特急","dest":"京成高砂","first":false},{"h":21,"m":52,"type":"快特","dest":"品川","first":false},{"h":22,"m":4,"type":"特急","dest":"青砥","first":false},{"h":22,"m":14,"type":"快特","dest":"泉岳寺","first":false},{"h":22,"m":26,"type":"特急","dest":"品川","first":false},{"h":22,"m":38,"type":"快特","dest":"京急川崎","first":false},{"h":22,"m":50,"type":"特急","dest":"品川","first":false},{"h":23,"m":2,"type":"快特","dest":"京急川崎","first":false},{"h":23,"m":14,"type":"特急","dest":"品川","first":false},{"h":23,"m":24,"type":"普通","dest":"神奈川新町","first":false},{"h":23,"m":36,"type":"特急","dest":"品川","first":false},{"h":23,"m":48,"type":"普通","dest":"神奈川新町","first":false},{"h":0,"m":0,"type":"特急","dest":"神奈川新町","first":false},{"h":0,"m":13,"type":"普通","dest":"神奈川新町","first":false}],"土日祝":[{"h":4,"m":56,"type":"普通","dest":"品川","first":true},{"h":5,"m":11,"type":"普通","dest":"品川","first":true},{"h":5,"m":23,"type":"特急","dest":"羽田空港","first":false},{"h":5,"m":26,"type":"普通","dest":"品川","first":true},{"h":5,"m":41,"type":"普通","dest":"品川","first":true},{"h":5,"m":50,"type":"特急","dest":"羽田空港","first":false},{"h":5,"m":56,"type":"普通","dest":"品川","first":true},{"h":6,"m":7,"type":"特急","dest":"羽田空港","first":false},{"h":6,"m":13,"type":"快特","dest":"泉岳寺","first":false},{"h":6,"m":21,"type":"普通","dest":"品川","first":true},{"h":6,"m":26,"type":"特急","dest":"印旛日本医大","first":false},{"h":6,"m":32,"type":"快特","dest":"品川","first":false},{"h":6,"m":41,"type":"特急","dest":"羽田空港","first":false},{"h":6,"m":45,"type":"快特","dest":"泉岳寺","first":false},{"h":6,"m":53,"type":"特急","dest":"成田空港","first":false},{"h":7,"m":1,"type":"快特","dest":"品川","first":false},{"h":7,"m":8,"type":"特急","dest":"羽田空港","first":false},{"h":7,"m":13,"type":"快特","dest":"泉岳寺","first":false},{"h":7,"m":21,"type":"特急","dest":"印西牧の原","first":false},{"h":7,"m":31,"type":"快特","dest":"品川","first":false},{"h":7,"m":40,"type":"特急","dest":"羽田空港","first":false},{"h":7,"m":45,"type":"快特","dest":"泉岳寺","first":false},{"h":7,"m":53,"type":"特急","dest":"成田空港","first":false},{"h":8,"m":1,"type":"快特","dest":"品川","first":false},{"h":8,"m":11,"type":"快特","dest":"泉岳寺","first":false},{"h":8,"m":21,"type":"特急","dest":"羽田空港","first":false},{"h":8,"m":31,"type":"快特","dest":"品川","first":false},{"h":8,"m":41,"type":"特急","dest":"青砥","first":false},{"h":8,"m":51,"type":"快特","dest":"泉岳寺","first":false},{"h":9,"m":1,"type":"特急","dest":"羽田空港","first":false},{"h":9,"m":11,"type":"快特","dest":"品川","first":false},{"h":9,"m":21,"type":"特急","dest":"印旛日本医大","first":false},{"h":9,"m":31,"type":"快特","dest":"泉岳寺","first":false},{"h":9,"m":41,"type":"特急","dest":"京成高砂","first":false},{"h":9,"m":51,"type":"快特","dest":"品川","first":false},{"h":10,"m":1,"type":"特急","dest":"羽田空港","first":false},{"h":10,"m":11,"type":"快特","dest":"泉岳寺","first":false},{"h":10,"m":21,"type":"特急","dest":"印旛日本医大","first":false},{"h":10,"m":31,"type":"快特","dest":"品川","first":false},{"h":10,"m":41,"type":"特急","dest":"京成高砂","first":false},{"h":10,"m":51,"type":"快特","dest":"泉岳寺","first":false},{"h":11,"m":4,"type":"特急","dest":"印旛日本医大","first":false},{"h":11,"m":11,"type":"快特","dest":"品川","first":false},{"h":11,"m":24,"type":"特急","dest":"京成高砂","first":false},{"h":11,"m":31,"type":"快特","dest":"泉岳寺","first":false},{"h":11,"m":44,"type":"特急","dest":"印旛日本医大","first":false},{"h":11,"m":51,"type":"快特","dest":"品川","first":false},{"h":12,"m":4,"type":"特急","dest":"京成高砂","first":false},{"h":12,"m":11,"type":"快特","dest":"泉岳寺","first":false},{"h":12,"m":24,"type":"特急","dest":"印旛日本医大","first":false},{"h":12,"m":31,"type":"快特","dest":"品川","first":false},{"h":12,"m":44,"type":"特急","dest":"京成高砂","first":false},{"h":12,"m":51,"type":"快特","dest":"泉岳寺","first":false},{"h":13,"m":4,"type":"特急","dest":"印旛日本医大","first":false},{"h":13,"m":11,"type":"快特","dest":"品川","first":false},{"h":13,"m":24,"type":"特急","dest":"京成高砂","first":false},{"h":13,"m":31,"type":"快特","dest":"泉岳寺","first":false},{"h":13,"m":44,"type":"特急","dest":"印旛日本医大","first":false},{"h":13,"m":51,"type":"快特","dest":"品川","first":false},{"h":14,"m":4,"type":"特急","dest":"京成高砂","first":false},{"h":14,"m":11,"type":"快特","dest":"泉岳寺","first":false},{"h":14,"m":24,"type":"特急","dest":"印旛日本医大","first":false},{"h":14,"m":31,"type":"快特","dest":"品川","first":false},{"h":14,"m":44,"type":"特急","dest":"京成高砂","first":false},{"h":14,"m":51,"type":"快特","dest":"泉岳寺","first":false},{"h":15,"m":4,"type":"特急","dest":"印旛日本医大","first":false},{"h":15,"m":11,"type":"快特","dest":"品川","first":false},{"h":15,"m":24,"type":"特急","dest":"京成高砂","first":false},{"h":15,"m":31,"type":"快特","dest":"泉岳寺","first":false},{"h":15,"m":44,"type":"特急","dest":"印旛日本医大","first":false},{"h":15,"m":51,"type":"快特","dest":"品川","first":false},{"h":16,"m":4,"type":"特急","dest":"京成高砂","first":false},{"h":16,"m":11,"type":"快特","dest":"泉岳寺","first":false},{"h":16,"m":24,"type":"特急","dest":"印旛日本医大","first":false},{"h":16,"m":31,"type":"快特","dest":"品川","first":false},{"h":16,"m":44,"type":"特急","dest":"京成高砂","first":false},{"h":16,"m":51,"type":"快特","dest":"泉岳寺","first":false},{"h":17,"m":4,"type":"特急","dest":"印旛日本医大","first":false},{"h":17,"m":11,"type":"快特","dest":"品川","first":false},{"h":17,"m":24,"type":"特急","dest":"京成高砂","first":false},{"h":17,"m":31,"type":"快特","dest":"泉岳寺","first":false},{"h":17,"m":44,"type":"特急","dest":"印旛日本医大","first":false},{"h":17,"m":51,"type":"快特","dest":"品川","first":false},{"h":18,"m":4,"type":"特急","dest":"京成高砂","first":false},{"h":18,"m":11,"type":"快特","dest":"泉岳寺","first":false},{"h":18,"m":24,"type":"特急","dest":"印旛日本医大","first":false},{"h":18,"m":31,"type":"快特","dest":"品川","first":false},{"h":18,"m":44,"type":"特急","dest":"京成高砂","first":false},{"h":18,"m":51,"type":"快特","dest":"泉岳寺","first":false},{"h":19,"m":4,"type":"特急","dest":"青砥","first":false},{"h":19,"m":12,"type":"快特","dest":"品川","first":false},{"h":19,"m":22,"type":"特急","dest":"京成高砂","first":false},{"h":19,"m":32,"type":"快特","dest":"泉岳寺","first":false},{"h":19,"m":42,"type":"特急","dest":"青砥","first":false},{"h":19,"m":52,"type":"快特","dest":"品川","first":false},{"h":20,"m":2,"type":"特急","dest":"京成高砂","first":false},{"h":20,"m":12,"type":"快特","dest":"泉岳寺","first":false},{"h":20,"m":22,"type":"特急","dest":"青砥","first":false},{"h":20,"m":32,"type":"快特","dest":"品川","first":false},{"h":20,"m":42,"type":"特急","dest":"京成高砂","first":false},{"h":20,"m":52,"type":"快特","dest":"泉岳寺","first":false},{"h":21,"m":2,"type":"特急","dest":"青砥","first":false},{"h":21,"m":12,"type":"快特","dest":"品川","first":false},{"h":21,"m":22,"type":"特急","dest":"京成高砂","first":false},{"h":21,"m":32,"type":"快特","dest":"泉岳寺","first":false},{"h":21,"m":42,"type":"特急","dest":"青砥","first":false},{"h":21,"m":52,"type":"快特","dest":"品川","first":false},{"h":22,"m":4,"type":"特急","dest":"京成高砂","first":false},{"h":22,"m":14,"type":"快特","dest":"泉岳寺","first":false},{"h":22,"m":26,"type":"特急","dest":"品川","first":false},{"h":22,"m":38,"type":"快特","dest":"京急川崎","first":false},{"h":22,"m":50,"type":"特急","dest":"品川","first":false},{"h":23,"m":2,"type":"快特","dest":"京急川崎","first":false},{"h":23,"m":14,"type":"特急","dest":"品川","first":false},{"h":23,"m":24,"type":"普通","dest":"神奈川新町","first":false},{"h":23,"m":36,"type":"特急","dest":"品川","first":false},{"h":23,"m":48,"type":"普通","dest":"神奈川新町","first":false},{"h":0,"m":0,"type":"特急","dest":"神奈川新町","first":false},{"h":0,"m":13,"type":"普通","dest":"神奈川新町","first":false}]};
+
+// ═══════════════════════════════════════════════
+// バスデータ（往き：上大岡駅8番のりば発）
+// ═══════════════════════════════════════════════
+const BUS_GO={
 weekday:[
-  {h:6,m:11,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:6,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:6,m:36,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:7,m:1, r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:7,m:5, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:7,m:18,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:7,m:24,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:7,m:35,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:7,m:35,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:7,m:40,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:7,m:58,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:8,m:2, r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:8,m:21,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:8,m:25,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:8,m:30,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:8,m:37,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:8,m:41,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:8,m:52,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:8,m:54,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:9,m:20,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:9,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:9,m:46,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:9,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:10,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:10,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:10,m:35,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:10,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:11,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:11,m:24,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:11,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:11,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:11,m:55,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:12,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:12,m:20,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},
-  {h:12,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:12,m:45,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:12,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:13,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:13,m:11,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:13,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:13,m:35,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},
-  {h:13,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:14,m:0, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:14,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:14,m:24,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:14,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:14,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:15,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:15,m:15,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:15,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:15,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:16,m:5, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:16,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:16,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:16,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:16,m:55,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:17,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:17,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:17,m:45,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:17,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:18,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:18,m:11,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:18,m:26,r:'r30',dest:'芹が谷',via:'上永谷駅経由',note:'芹が谷止'},
-  {h:18,m:35,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:18,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:19,m:0, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:19,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:19,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:19,m:34,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},
-  {h:20,m:6, r:'r30',dest:'芹が谷',via:'上永谷駅経由',note:'芹が谷止'},
-  {h:20,m:8, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:20,m:46,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:20,m:59,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:21,m:26,r:'r30',dest:'芹が谷',via:'上永谷駅経由',note:'芹が谷止'},
-  {h:21,m:55,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},
-  {h:22,m:6, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:6,m:11,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:6,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:6,m:36,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:7,m:1,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:7,m:5,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:7,m:18,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:7,m:24,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:7,m:35,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:7,m:35,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:7,m:40,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:7,m:58,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:8,m:2,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:8,m:21,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:8,m:25,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:8,m:30,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:8,m:37,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:8,m:41,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:8,m:52,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:8,m:54,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:9,m:20,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:9,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:9,m:46,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:9,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:10,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:10,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:10,m:35,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:10,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:11,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},{h:11,m:24,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:11,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:11,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:11,m:55,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:12,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:12,m:20,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},{h:12,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:12,m:45,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:12,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:13,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},{h:13,m:11,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:13,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:13,m:35,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},{h:13,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:14,m:0,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:14,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},{h:14,m:24,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:14,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:14,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:15,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:15,m:15,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:15,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:15,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:16,m:5,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:16,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},{h:16,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:16,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:16,m:55,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:17,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:17,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:17,m:45,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:17,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:18,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},{h:18,m:11,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:18,m:26,r:'r30',dest:'芹が谷',via:'上永谷駅経由',note:'芹が谷止'},
+  {h:18,m:35,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:18,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:19,m:0,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:19,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},{h:19,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:19,m:34,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},
+  {h:20,m:6,r:'r30',dest:'芹が谷',via:'上永谷駅経由',note:'芹が谷止'},{h:20,m:8,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:20,m:46,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:20,m:59,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:21,m:26,r:'r30',dest:'芹が谷',via:'上永谷駅経由',note:'芹が谷止'},{h:21,m:55,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},
+  {h:22,m:6,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'}
 ],
 saturday:[
-  {h:6,m:30,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:6,m:46,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:7,m:6, r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:7,m:8, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:7,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:7,m:46,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:7,m:53,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:8,m:6, r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:8,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:8,m:38,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:8,m:50,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:9,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:9,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:9,m:28,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},
-  {h:9,m:50,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:10,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:10,m:18,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:10,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:10,m:46,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:10,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:11,m:7, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:11,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:11,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:11,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:11,m:58,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:12,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:12,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:12,m:48,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:12,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:13,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:13,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:13,m:38,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:13,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:14,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:14,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:14,m:28,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:14,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:15,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:15,m:18,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:15,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:15,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:16,m:7, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:16,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:16,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:16,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:16,m:58,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:17,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:17,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:17,m:48,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:17,m:53,r:'r30',dest:'芹が谷',via:'上永谷駅経由',note:'芹が谷止'},
-  {h:18,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:18,m:26,r:'r30',dest:'芹が谷',via:'上永谷駅経由',note:'芹が谷止'},
-  {h:18,m:38,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},
-  {h:18,m:56,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:19,m:0, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:19,m:9, r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:19,m:28,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:19,m:53,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},
-  {h:20,m:9, r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:20,m:18,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:21,m:7, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},
-  {h:21,m:9, r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:22,m:7, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:6,m:30,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:6,m:46,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:7,m:6,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:7,m:8,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:7,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:7,m:46,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:7,m:53,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:8,m:6,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:8,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:8,m:38,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:8,m:50,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:9,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:9,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:9,m:28,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},{h:9,m:50,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:10,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},{h:10,m:18,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:10,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:10,m:46,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:10,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:11,m:7,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:11,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},{h:11,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:11,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:11,m:58,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:12,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},{h:12,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:12,m:48,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:12,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:13,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:13,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:13,m:38,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:13,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:14,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},{h:14,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:14,m:28,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:14,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:15,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},{h:15,m:18,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:15,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:15,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:16,m:7,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:16,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},{h:16,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:16,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:16,m:58,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:17,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},{h:17,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:17,m:48,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:17,m:53,r:'r30',dest:'芹が谷',via:'上永谷駅経由',note:'芹が谷止'},{h:18,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:18,m:26,r:'r30',dest:'芹が谷',via:'上永谷駅経由',note:'芹が谷止'},{h:18,m:38,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},{h:18,m:56,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:19,m:0,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:19,m:9,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:19,m:28,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:19,m:53,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},{h:20,m:9,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:20,m:18,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:21,m:7,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},{h:21,m:9,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:22,m:7,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'}
 ],
 holiday:[
-  {h:6,m:16,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:6,m:40,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:7,m:8, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:7,m:10,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:7,m:53,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:8,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:8,m:38,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:8,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:9,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:9,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:9,m:28,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},
-  {h:9,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:10,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:10,m:18,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:10,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:10,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:11,m:7, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:11,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:11,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:11,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:11,m:58,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:12,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:12,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:12,m:48,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:12,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:13,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:13,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:13,m:38,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:13,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:14,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:14,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:14,m:28,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:14,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:15,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:15,m:18,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:15,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:15,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:16,m:7, r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:16,m:9, r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:16,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:16,m:56,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:16,m:58,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:17,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:17,m:48,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:17,m:56,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:18,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:18,m:38,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
-  {h:18,m:55,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
-  {h:19,m:26,r:'r30',dest:'芹が谷',via:'上永谷駅経由',note:'芹が谷止'},
-  {h:19,m:34,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},
-  {h:20,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
-  {h:21,m:26,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:6,m:16,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:6,m:40,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:7,m:8,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:7,m:10,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:7,m:53,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:8,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:8,m:38,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:8,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:9,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:9,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:9,m:28,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},{h:9,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:10,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},{h:10,m:18,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:10,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:10,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:11,m:7,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:11,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:11,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:11,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:11,m:58,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:12,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},{h:12,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:12,m:48,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:12,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:13,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},{h:13,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:13,m:38,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:13,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:14,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:14,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:14,m:28,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:14,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:15,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},{h:15,m:18,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:15,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:15,m:53,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:16,m:7,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:16,m:9,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:16,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:16,m:56,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},{h:16,m:58,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},
+  {h:17,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:17,m:48,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:17,m:56,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:18,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},{h:18,m:38,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由'},{h:18,m:55,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'},
+  {h:19,m:26,r:'r30',dest:'芹が谷',via:'上永谷駅経由',note:'芹が谷止'},{h:19,m:34,r:'r31',dest:'下野庭三田',via:'公務員住宅中央経由',note:'下野庭三田止'},{h:20,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅・芹が谷経由'},
+  {h:21,m:26,r:'mai',dest:'舞岡',via:'上永谷駅・日限山経由'}
+]};
+
+// ═══════════════════════════════════════════════
+// バスデータ（帰り：下車ケ谷発→上大岡駅行き）
+// ═══════════════════════════════════════════════
+const BUS_BACK={
+weekday:[
+  {h:5,m:54,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},{h:6,m:11,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:6,m:21,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:6,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:6,m:39,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:6,m:59,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},
+  {h:7,m:11,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:7,m:14,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:7,m:28,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:7,m:28,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:7,m:47,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:8,m:3,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},
+  {h:8,m:12,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:8,m:21,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:8,m:31,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:8,m:35,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:8,m:47,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:8,m:49,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:8,m:51,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:8,m:53,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:9,m:4,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:9,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:9,m:43,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:9,m:49,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:9,m:56,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:10,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:10,m:8,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},
+  {h:10,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:10,m:49,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},{h:10,m:58,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},
+  {h:11,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:11,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:11,m:47,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},
+  {h:11,m:49,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},{h:12,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:12,m:18,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},
+  {h:12,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:12,m:43,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:12,m:49,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:13,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:13,m:8,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:13,m:34,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},
+  {h:13,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:13,m:49,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},{h:14,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:14,m:23,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:14,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:14,m:47,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},
+  {h:14,m:49,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},{h:15,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:15,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:15,m:38,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:15,m:49,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},{h:16,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:16,m:28,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:16,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:17,m:2,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:17,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:17,m:18,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:17,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:18,m:2,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},{h:18,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:18,m:8,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},
+  {h:18,m:34,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:18,m:58,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:19,m:2,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:19,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:19,m:23,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:20,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:20,m:31,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:21,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:21,m:22,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'}
 ],
-};
+saturday:[
+  {h:6,m:40,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:6,m:56,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:7,m:16,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:7,m:18,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:7,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:7,m:56,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:8,m:3,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:8,m:16,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:8,m:33,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:8,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:8,m:48,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:9,m:0,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:9,m:33,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},{h:9,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:9,m:38,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},
+  {h:10,m:0,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:10,m:28,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:10,m:33,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:10,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:10,m:56,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:11,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:11,m:17,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:11,m:33,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},{h:11,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:12,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:12,m:8,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:12,m:33,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:12,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:12,m:58,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:13,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:13,m:33,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},{h:13,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:13,m:48,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},
+  {h:14,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:14,m:33,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},{h:14,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:14,m:38,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:15,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:15,m:28,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},
+  {h:15,m:33,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},{h:15,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:16,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:16,m:17,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:16,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:16,m:46,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:17,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:17,m:8,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:17,m:46,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:17,m:58,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:18,m:19,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:18,m:46,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:18,m:48,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:19,m:10,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:19,m:19,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:19,m:38,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:20,m:19,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:20,m:28,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},
+  {h:21,m:17,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:21,m:19,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'}
+],
+holiday:[
+  {h:6,m:26,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:6,m:50,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:7,m:18,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},
+  {h:7,m:20,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:8,m:3,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:8,m:33,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:8,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:8,m:48,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:9,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:9,m:33,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},{h:9,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:9,m:38,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},
+  {h:10,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:10,m:28,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:10,m:33,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:10,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:11,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:11,m:17,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},
+  {h:11,m:33,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},{h:11,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:12,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:12,m:8,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:12,m:33,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},{h:12,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:12,m:58,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:13,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:13,m:33,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:13,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:13,m:48,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:14,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:14,m:33,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},{h:14,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:14,m:38,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},
+  {h:15,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:15,m:28,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:15,m:33,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:15,m:36,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:16,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:16,m:17,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},
+  {h:16,m:19,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},{h:16,m:46,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},{h:17,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},
+  {h:17,m:8,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:17,m:46,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},{h:17,m:58,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},
+  {h:18,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:18,m:45,r:'mai',dest:'上大岡駅',via:'上永谷駅経由'},{h:18,m:48,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},
+  {h:19,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'},{h:19,m:44,r:'r31',dest:'上大岡駅',via:'公務員住宅中央経由'},{h:20,m:3,r:'r30',dest:'上大岡駅',via:'上永谷駅経由'}
+]};
 
-// ── 定数 ──
-const LABEL = {mai:'舞01', r30:'上30', r31:'上31'};
-const BCLS  = {mai:'bm',  r30:'b30',  r31:'b31'};
-const COLOR  = {mai:'var(--mai)', r30:'var(--r30)', r31:'var(--r31)'};
-
-let currentDay = 'weekday';
-
-function pad(n){ return String(n).padStart(2,'0'); }
-function nowMin(){ const d=new Date(); return d.getHours()*60+d.getMinutes(); }
-
-function sorted(day){
-  return [...TT[day]].sort((a,b)=>a.h*60+a.m-(b.h*60+b.m));
-}
-
+// ═══════════════════════════════════════════════
+// ユーティリティ
+// ═══════════════════════════════════════════════
+const pad=n=>String(n).padStart(2,'0');
+const nowMin=()=>{const d=new Date();return d.getHours()*60+d.getMinutes();};
+const HOLIDAYS=['2025-01-01','2025-01-13','2025-02-11','2025-02-23','2025-02-24','2025-03-20','2025-04-29','2025-05-03','2025-05-04','2025-05-05','2025-05-06','2025-07-21','2025-08-11','2025-09-15','2025-09-22','2025-09-23','2025-10-13','2025-11-03','2025-11-23','2025-11-24','2026-01-01','2026-01-12','2026-02-11','2026-02-23','2026-03-20','2026-04-29','2026-05-03','2026-05-04','2026-05-05','2026-05-06','2026-07-20','2026-08-11','2026-09-21','2026-09-22','2026-09-23','2026-10-12','2026-11-03','2026-11-23'];
 function detectDay(){
-  const d=new Date(), dow=d.getDay();
-  const holidays=['2025-01-01','2025-01-13','2025-02-11','2025-02-23','2025-02-24','2025-03-20',
-    '2025-04-29','2025-05-03','2025-05-04','2025-05-05','2025-05-06','2025-07-21','2025-08-11',
-    '2025-09-15','2025-09-22','2025-09-23','2025-10-13','2025-11-03','2025-11-23','2025-11-24',
-    '2026-01-01','2026-01-12','2026-02-11','2026-02-23','2026-03-20','2026-04-29','2026-05-03',
-    '2026-05-04','2026-05-05','2026-05-06','2026-07-20','2026-08-11','2026-09-21','2026-09-22',
-    '2026-09-23','2026-10-12','2026-11-03','2026-11-23'];
+  const d=new Date(),dow=d.getDay();
   const ds=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-  if(holidays.includes(ds)||dow===0) return 'holiday';
-  if(dow===6) return 'saturday';
-  return 'weekday';
+  if(HOLIDAYS.includes(ds)||dow===0)return'holiday';
+  if(dow===6)return'saturday';
+  return'weekday';
+}
+function isWeekend(d){const w=d.getDay();return w===0||w===6;}
+
+// ═══════════════════════════════════════════════
+// 状態
+// ═══════════════════════════════════════════════
+let currentTab='train';
+let trainDir='down';
+let busGoDay=detectDay();
+let busBackDay=detectDay();
+
+const BLABEL={mai:'舞01',r30:'上30',r31:'上31'};
+const BCLS={mai:'bm',r30:'b30',r31:'b31'};
+const BCOLOR={mai:'var(--mai)',r30:'var(--r30)',r31:'var(--r31)'};
+
+// ═══════════════════════════════════════════════
+// タブ切り替え
+// ═══════════════════════════════════════════════
+function showTab(tab){
+  currentTab=tab;
+  ['train','bus-go','bus-back'].forEach(t=>{
+    document.getElementById('page-'+t).classList.toggle('active',t===tab);
+    const btn=document.getElementById('tab-'+t);
+    btn.className='tab-btn';
+    if(t===tab){
+      if(t==='train')btn.classList.add('active-train');
+      else if(t==='bus-go')btn.classList.add('active-bus-go');
+      else btn.classList.add('active-bus-back');
+    }
+  });
 }
 
-function render(){
+// ═══════════════════════════════════════════════
+// 電車レンダリング
+// ═══════════════════════════════════════════════
+function badgeCls(t){
+  return({'快特':'b-快特','エアポート快特':'b-エアポート快特','特急':'b-特急','急行':'b-急行','ウィング':'b-ウィング'}[t]||'b-普通');
+}
+function renderTrain(){
+  const now=new Date(),nowM=nowMin();
+  const wknd=isWeekend(now);
+  const key=wknd?'土日祝':'平日';
+  const src=trainDir==='down'?TT_DOWN:TT_UP;
+  const trains=(src[key]||[]).map(t=>({...t,totalM:(t.h===0?24:t.h)*60+t.m})).filter(t=>t.totalM>=nowM).slice(0,8);
+  const el=document.getElementById('train-list');
+  // クロック・ピル
+  document.getElementById('t-clock').textContent=`${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const pill=document.getElementById('t-pill');
+  pill.textContent=wknd?'土日祝':'平日';
+  pill.className='day-pill '+(wknd?'pill-weekend':'pill-weekday');
+  if(!trains.length){el.innerHTML='<div class="msg">本日の運行は終了しました</div>';return;}
+  el.innerHTML=trains.map((t,i)=>{
+    const diff=t.totalM-nowM;
+    const cd=diff<=0?'まもなく':`あと${diff}分`;
+    const cdCls=diff<=3?'soon':'';
+    return`<div class="item-row${i===0?' is-top':''}">
+    ${i===0?'<div class="top-bar" style="background:var(--red)"></div>':''}
+    <div class="time-col"><div class="time-big">${pad(t.h===0?0:t.h)}:${pad(t.m)}</div><div class="cntdwn ${cdCls}">${cd}</div></div>
+    <span class="badge ${badgeCls(t.type)}">${t.type}</span>
+    <div class="dest-col"><div class="dest">${t.dest}</div>${t.first?'<span class="first-badge">始発</span>':''}</div>
+    </div>`;
+  }).join('');
+}
+function setDir(d){
+  trainDir=d;
+  document.getElementById('btn-down').className='dir-btn'+(d==='down'?' active':'');
+  document.getElementById('btn-up').className='dir-btn'+(d==='up'?' active':'');
+  document.getElementById('t-from').textContent=d==='down'?'品川':'上大岡';
+  document.getElementById('t-to').textContent=d==='down'?'上大岡方面':'品川';
+  renderTrain();
+}
+
+// ═══════════════════════════════════════════════
+// バス共通レンダリング
+// ═══════════════════════════════════════════════
+function renderBus(data,day,elId,clockId,pillId){
   const now=nowMin();
-  const buses=sorted(currentDay);
+  const buses=[...data[day]].sort((a,b)=>a.h*60+a.m-(b.h*60+b.m));
   const ni=buses.findIndex(b=>b.h*60+b.m>=now);
-
-  // 表示リスト: 直前1本(グレー) + 次の3本
   const show=[];
-  if(ni===-1){
-    // 全便終了
-    if(buses.length) show.push({...buses[buses.length-1],past:true});
-  } else {
-    if(ni>0) show.push({...buses[ni-1],past:true});
-    for(let i=0;i<3&&ni+i<buses.length;i++) show.push({...buses[ni+i],past:false});
-  }
-
-  if(!show.length){
-    document.getElementById('bus-list').innerHTML='<div class="msg">本日の運行はありません</div>';
-    return;
-  }
-
-  let html='';
-  const firstFutureIdx = show.findIndex(b=>!b.past);
-
-  show.forEach((b,i)=>{
+  if(ni===-1){if(buses.length)show.push({...buses[buses.length-1],past:true});}
+  else{if(ni>0)show.push({...buses[ni-1],past:true});for(let i=0;i<3&&ni+i<buses.length;i++)show.push({...buses[ni+i],past:false});}
+  const el=document.getElementById(elId);
+  // クロック
+  const d=new Date();
+  document.getElementById(clockId).textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  if(!show.length){el.innerHTML='<div class="msg">本日の運行はありません</div>';return;}
+  const firstFI=show.findIndex(b=>!b.past);
+  el.innerHTML=show.map((b,i)=>{
     const ts=`${pad(b.h)}:${pad(b.m)}`;
     const diff=b.h*60+b.m-now;
-    const isTop=!b.past&&i===firstFutureIdx;
-
-    // カウントダウン
-    let cntHtml='';
-    if(b.past){
-      cntHtml=`<div class="cntdwn gone">発車済み</div>`;
-    } else if(diff===0){
-      cntHtml=`<div class="cntdwn soon">まもなく発車</div>`;
-    } else if(diff<=5){
-      cntHtml=`<div class="cntdwn soon">あと ${diff} 分</div>`;
-    } else {
-      cntHtml=`<div class="cntdwn">あと ${diff} 分</div>`;
-    }
-
-    const noteHtml=b.note?`<span class="note-tag">${b.note}</span>`:'';
-    const barColor=b.past?'#ccc':COLOR[b.r];
-    const rowCls=b.past?'bus-row is-past':(isTop?'bus-row is-top':'bus-row');
-
-    html+=`<div class="${rowCls}">
-  <div class="top-bar" style="background:${barColor}"></div>
-  <div class="time-col">
-    <div class="time">${ts}</div>
-    ${cntHtml}
-  </div>
-  <span class="route-badge ${BCLS[b.r]}">${LABEL[b.r]}</span>
-  <div class="dest-col">
-    <div class="dest">${b.dest}</div>
-    <div class="via">${b.via}</div>
-    ${noteHtml}
-  </div>
-</div>`;
-  });
-
-  document.getElementById('bus-list').innerHTML=html;
+    const isTop=!b.past&&i===firstFI;
+    let cd='';
+    if(b.past)cd='<div class="cntdwn gone">発車済み</div>';
+    else if(diff===0)cd='<div class="cntdwn soon-bus">まもなく発車</div>';
+    else if(diff<=5)cd=`<div class="cntdwn soon-bus">あと ${diff} 分</div>`;
+    else cd=`<div class="cntdwn">あと ${diff} 分</div>`;
+    const bar=b.past?'#ccc':BCOLOR[b.r];
+    const rc=b.past?'item-row is-past':(isTop?'item-row is-top-bus':'item-row');
+    const note=b.note?`<span class="note-tag">${b.note}</span>`:'';
+    return`<div class="${rc}">
+    <div class="top-bar" style="background:${bar}"></div>
+    <div class="time-col"><div class="time-big">${ts}</div>${cd}</div>
+    <span class="badge ${BCLS[b.r]}">${BLABEL[b.r]}</span>
+    <div class="dest-col"><div class="dest">${b.dest}</div><div class="via">${b.via}</div>${note}</div>
+    </div>`;
+  }).join('');
 }
 
-function setDay(day){
-  currentDay=day;
-  const activeCls={weekday:'aw',saturday:'as',holiday:'ah'};
+// ── バス往き曜日 ──
+function setBusGoDay(day){
+  busGoDay=day;
+  const ac={weekday:'aw',saturday:'as',holiday:'ah'};
   ['weekday','saturday','holiday'].forEach(d=>{
-    const btn=document.getElementById('btn-'+d);
-    btn.className='day-btn'+(d===day?' '+activeCls[d]:'');
+    document.getElementById('g-btn-'+d).className='day-btn'+(d===day?' '+ac[d]:'');
   });
-  const pillCls={weekday:'day-pill pill-weekday',saturday:'day-pill pill-saturday',holiday:'day-pill pill-holiday'};
-  const pillTxt={weekday:'平日',saturday:'土曜',holiday:'日祝'};
-  const pill=document.getElementById('day-pill');
-  pill.className=pillCls[day];
-  pill.textContent=pillTxt[day];
-  render();
+  const pc={weekday:'day-pill pill-weekday',saturday:'day-pill pill-saturday',holiday:'day-pill pill-holiday'};
+  const pt={weekday:'平日',saturday:'土曜',holiday:'日祝'};
+  const p=document.getElementById('g-pill');p.className=pc[day];p.textContent=pt[day];
+  renderBus(BUS_GO,day,'bus-go-list','g-clock','g-pill');
+}
+// ── バス帰り曜日 ──
+function setBusBackDay(day){
+  busBackDay=day;
+  const ac={weekday:'aw',saturday:'as',holiday:'ah'};
+  ['weekday','saturday','holiday'].forEach(d=>{
+    document.getElementById('b-btn-'+d).className='day-btn'+(d===day?' '+ac[d]:'');
+  });
+  const pc={weekday:'day-pill pill-weekday',saturday:'day-pill pill-saturday',holiday:'day-pill pill-holiday'};
+  const pt={weekday:'平日',saturday:'土曜',holiday:'日祝'};
+  const p=document.getElementById('b-pill');p.className=pc[day];p.textContent=pt[day];
+  renderBus(BUS_BACK,day,'bus-back-list','b-clock','b-pill');
 }
 
-function updateClock(){
-  const d=new Date();
-  document.getElementById('clock').textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}`;
+// ═══════════════════════════════════════════════
+// 初期化 & 定期更新
+// ═══════════════════════════════════════════════
+function renderAll(){
+  renderTrain();
+  renderBus(BUS_GO,busGoDay,'bus-go-list','g-clock','g-pill');
+  renderBus(BUS_BACK,busBackDay,'bus-back-list','b-clock','b-pill');
 }
-
-function init(){
-  updateClock();
-  setDay(detectDay());
-  const tick=()=>{
-    updateClock();
-    render();
-    setTimeout(tick,60000-Date.now()%60000);
-  };
+// 初期ボタン状態
+(function init(){
+  const day=detectDay();
+  busGoDay=day;busBackDay=day;
+  setBusGoDay(day);
+  setBusBackDay(day);
+  setDir('down');
+  renderAll();
+  const tick=()=>{renderAll();setTimeout(tick,60000-Date.now()%60000);};
   setTimeout(tick,60000-Date.now()%60000);
-}
-
-init();
+})();
 </script>
 </body>
 </html>
